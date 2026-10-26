@@ -33,7 +33,7 @@ if command -v pkg >/dev/null 2>&1; then
   echo "[setup] installing nodejs and git..."
   pkg install -y nodejs git
 else
-  echo "[setup] 'pkg' not found; skipping apt install. Ensure node >= 22.5 and git are available."
+  echo "[setup] 'pkg' not found; skipping apt install. Ensure node >= 22.13 and git are available."
 fi
 
 if ! command -v node >/dev/null 2>&1; then
@@ -44,9 +44,11 @@ fi
 NODE_VERSION="$(node -p 'process.versions.node')"
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 NODE_MINOR="$(node -p 'process.versions.node.split(".")[1]')"
-if [ "$NODE_MAJOR" -lt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 5 ]; }; then
-  echo "[setup] ERROR: Node $NODE_VERSION is too old; node:sqlite needs >= 22.5" >&2
-  echo "[setup] Run 'pkg upgrade' or install a current Node.js." >&2
+if [ "$NODE_MAJOR" -lt 22 ] || \
+   { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 13 ]; } || \
+   { [ "$NODE_MAJOR" -eq 23 ] && [ "$NODE_MINOR" -lt 4 ]; }; then
+  echo "[setup] ERROR: Node $NODE_VERSION is too old; node:sqlite is unflagged from 22.13 / 23.4" >&2
+  echo "[setup] Run 'pkg upgrade' or install Node 24.x." >&2
   exit 1
 fi
 echo "[setup] node $NODE_VERSION"

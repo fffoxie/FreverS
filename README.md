@@ -32,7 +32,7 @@ profile is a local placeholder group. All response shapes are documented in
 
 ## Requirements
 
-- Node.js **22.5 or newer** (the server uses the built-in `node:sqlite` module).
+- Node.js **22.13 or newer** (24.x recommended). The server uses the built-in `node:sqlite` module.
 - Termux from **F-Droid** on the phone, or any Linux/macOS machine for local
   development.
 - No npm dependencies, no compile step.
@@ -47,7 +47,7 @@ profile is a local placeholder group. All response shapes are documented in
    ```sh
    pkg update && pkg upgrade
    pkg install nodejs git
-   node --version      # must be >= 22.5
+   node --version      # must be >= 22.13 (24.x recommended)
    ```
 
 3. Clone and start:
@@ -214,7 +214,7 @@ and avatar/group data, then `SMOKE OK`.
 
 | Symptom | Cause / fix |
 | --- | --- |
-| `Cannot find module 'node:sqlite'` | Node is older than 22.5. `pkg upgrade` in Termux, or install a current Node. |
+| `Cannot find module 'node:sqlite'` | Node is older than 22.13. `pkg upgrade` in Termux, or install a current Node. |
 | `EADDRINUSE` | Another server uses 8080. `FREVERS_PORT=8081 npm start`, and update the patched client. |
 | Game cannot reach `127.0.0.1:8080` | Same-phone patched build only. For another device use the phone's `wlan0` IP. |
 | Another device times out | Both devices must be on the same Wi-Fi; guest Wi-Fi often blocks client-to-client traffic. Check `FREVERS_HOST=0.0.0.0` and Android battery settings. |

@@ -5,7 +5,7 @@
   "description": "Local-only private server for the Android game Frever 4.0.5 (com.FriendFactory.Frever)",
   "type": "module",
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "start": "node src/server.js",
