@@ -158,7 +158,7 @@ without an app-level trust exception Android will reject a local CA on targetSdk
 ## Tests and smoke test
 
 ```sh
-npm test        # 21 tests, one per implemented endpoint + error/404 cases
+npm test        # 24 tests, one per implemented endpoint + error/404 cases
 npm run smoke   # requires a running server
 ```
 
@@ -249,5 +249,8 @@ docs/protocol.md     endpoint reference and UNKNOWN list
 - [`docs/protocol.md`](docs/protocol.md) — every implemented endpoint with
   method, path, headers, body, response, caller and flow, plus the confirmed
   but unimplemented paths and the remaining UNKNOWNs.
+- [`docs/final-report.md`](docs/final-report.md) — endpoints found/implemented/
+  UNKNOWN, what was tested, what could not be tested, and the certificate
+  blocker.
 
 

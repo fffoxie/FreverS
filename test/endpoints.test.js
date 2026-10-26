@@ -266,4 +266,51 @@ describe('social, profile and fallback endpoints', () => {
   });
 });
 
+
+describe('method variants', () => {
+  test('POST /api/client/urls returns the same ServicesUrls shape', async () => {
+    const response = await fetch(`${ctx.baseUrl}/api/client/urls`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`
+      },
+      body: '{}'
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(typeof body.Client, 'string');
+    assert.equal(body.Client, ctx.baseUrl);
+  });
+
+  test('PUT /api/credential/username accepts the same body as POST', async () => {
+    const friendLogin = await login(ctx.baseUrl, 'friend_renamed', PASSWORD2);
+    assert.equal(friendLogin.response.status, 200);
+    const response = await fetch(`${ctx.baseUrl}/api/credential/username`, {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${friendLogin.json.access_token}`
+      },
+      body: JSON.stringify({ username: 'friend_renamed' })
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {});
+  });
+
+  test('a token request on an unknown auth prefix still reaches the handler', async () => {
+    const response = await fetch(`${ctx.baseUrl}/auth/4.0.5/connect/token`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password',
+        username: 'fffoxie',
+        password: PASSWORD1
+      })
+    });
+    assert.equal(response.status, 200);
+    assert.ok((await response.json()).access_token);
+  });
+});
+
 });

@@ -48,7 +48,14 @@ export const endpoints = [
   {
     id: 'client-urls',
     method: 'GET',
-    paths: ['/api/client/urls', '/auth/api/client/urls', '/api/Client/urls', '/api/client/Urls'],
+    paths: [
+      '/api/client/urls',
+      '/auth/api/client/urls',
+      '/api/Client/urls',
+      '/api/client/Urls',
+      '/api/api/client/urls',
+      '/auth/api/api/client/urls'
+    ],
     handler: urls,
     description: 'Service host list (AuthService.GetServicesUrls)'
   },
@@ -192,6 +199,11 @@ export function matchEndpoint(method, pathname) {
         params: { id: decodeURIComponent(match[1]) }
       };
     }
+  }
+  // The auth base URL could not be reconstructed exactly (auth/<version>).
+  // Any POST that ends in /connect/token is the token endpoint.
+  if (method === 'POST' && /\/connect\/token$/.test(path)) {
+    return { endpoint: { id: 'token-suffix', handler: login, description: 'Token endpoint (suffix alias)' }, params: {} };
   }
   return null;
 }

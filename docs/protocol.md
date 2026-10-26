@@ -51,7 +51,7 @@ Recovered from `Bridge.Authorization.RequestHelper`,`AuthService` and
 | Header | When | Value |
 | --- | --- | --- |
 | `Authorization: Bearer <token>` | every authenticated service call | JWT returned by `connect/token` |
-| `Authorization: Basic <base64>` | `connect/token`, `/Account/Register` | base64 of `Server:g'KpB#[_(<KP;Et25]a__J*mh;?(=h%NPd('=Z9KpC2xQ.F-E5{Sd>*AtK!t!t9-_Zq9-{.r` (`AuthService.ClientIdAndSecret`) |
+| `Authorization: Basic <base64>` | `connect/token`, `/Account/Register` | base64 of `Server:<redacted secret embedded in the APK>` (`AuthService.ClientIdAndSecret`; the extracted value is deliberately not stored in this repository) |
 | `X-Device-Id` | auth and credential calls | `AuthService.DeviceId` (Android device id) |
 | `X-Session-Id` | all `RequestHelper` requests | session id passed to `RequestHelper` ctor |
 | `x-unity-version` | all `RequestHelper` requests | Unity version string |
@@ -220,6 +220,12 @@ contains extracted game strings.
    names are confirmed; missing nested models become `null` after Newtonsoft
    deserialisation. Only a device run can confirm the UI accepts that.
 6. **Runtime SDK gates.** See `docs/analysis.md` §5.
+7. **Protobuf.** `ServiceBase.SendRequestForSingleModel` defaults to
+   `useProtobuf = true` and `ProtobufResponseReader` exists; the server always
+   returns JSON. Login, `/me` and the group/profile handlers were not proven to
+   request protobuf, but if a device shows a decode failure on one of them, add
+   an `Accept: application/vnd.google.protobuf` response path. All implemented
+   routes currently return `application/json`.
 
 ## 8. Evidence trail
 

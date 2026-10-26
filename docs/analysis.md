@@ -17,7 +17,8 @@ asset bundle, dump, or extracted file is committed.
 
 ## 2. Unpacked contents
 
-`unzip -l` reports 2,115 entries and 438,497,533 bytes uncompressed.
+`unzip -l` reports 2,115 entries and 438,497,533 bytes uncompressed. The full
+listing is saved to `analysis/apk-filelist.txt` (git-ignored).
 
 | Group | Count / size |
 | --- | --- |

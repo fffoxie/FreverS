@@ -35,3 +35,6 @@ coverage/
 *.swp
 .idea/
 .vscode/
+
+# Agent session state
+.cline-home/
