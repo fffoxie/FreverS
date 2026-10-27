@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 
-const publicDashboardPath = path.join(config.rootDir, 'public', 'dashboard.html');
+const rootDir = config?.rootDir || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const publicDashboardPath = path.join(rootDir, 'public', 'dashboard.html');
 
 export function renderPage() {
   try {
