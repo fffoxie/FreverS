@@ -9,7 +9,14 @@ import {
   pastRewards,
   currentUser,
   currentBalance,
-  getGroup
+  getGroup,
+  starCreators,
+  bakingCharacters,
+  moderationWardrobeAvailability,
+  crewsList,
+  questsList,
+  moderationReasons,
+  inAppPurchaseOffers
 } from './handlers-data.js';
 
 /**
@@ -143,7 +150,7 @@ export const endpoints = [
       '/group/star-creators-in-your-country',
       '/group/public/group/star-creators-in-your-country'
     ],
-    handler: emptyArray,
+    handler: starCreators,
     description: 'SocialService.GetStarCreatorsInYourCountry'
   },
   {
@@ -173,6 +180,48 @@ export const endpoints = [
     paths: ['/health', '/healthz'],
     handler: () => ({ body: { status: 'ok', service: 'frevers', version: '0.1.0' } }),
     description: 'Local health probe (not called by the game)'
+  },
+  {
+    id: 'baking-characters',
+    method: 'GET',
+    paths: ['/baking/characters'],
+    handler: bakingCharacters,
+    description: 'Wardrobe and character baking list'
+  },
+  {
+    id: 'moderation-wardrobe-availability',
+    method: 'GET',
+    paths: ['/moderation/wardrobe/baking/availability'],
+    handler: moderationWardrobeAvailability,
+    description: 'Check wardrobe baking availability'
+  },
+  {
+    id: 'crew-top',
+    method: 'GET',
+    paths: ['/crew/top', '/crew/my/chat'],
+    handler: crewsList,
+    description: 'Crew top and chat endpoints'
+  },
+  {
+    id: 'quests',
+    method: 'GET',
+    paths: ['/quest', '/daily-quest'],
+    handler: questsList,
+    description: 'Quests and daily quest endpoints'
+  },
+  {
+    id: 'moderation-reasons',
+    method: 'GET',
+    paths: ['/moderation/reasons'],
+    handler: moderationReasons,
+    description: 'List moderation report reasons'
+  },
+  {
+    id: 'iap-offers',
+    method: 'GET',
+    paths: ['/purchase/in-app-purchase/offers'],
+    handler: inAppPurchaseOffers,
+    description: 'In-app purchase offers (returns empty list, all unlocked)'
   }
 ];
 
