@@ -1,5 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { authenticate } from './handlers-auth.js';
 import { HttpError } from './http.js';
+import { config } from './config.js';
 import {
   supportedVersions,
   servicesUrls,
@@ -80,12 +83,86 @@ export function urls(ctx) {
   return { body: servicesUrls() };
 }
 
+export function starCreators(ctx) {
+  authenticate(ctx, false);
+  return {
+    body: [
+      {
+        MainGroupId: 1001,
+        NickName: 'Star Creator',
+        CreatorScoreBadge: 1,
+        KPI: { FollowersCount: 10000, FollowingCount: 10, VideoLikesCount: 50000, PublishedVideoCount: 100, TotalVideoCount: 100, TaggedInVideoCount: 0, TotalDraftsCount: 0, TotalLevelsCount: 0, TaskVideoCount: 0, FriendsCount: 50 },
+        YouFollowUser: false,
+        UserFollowsYou: false,
+        CharacterAccess: 0,
+        Bio: 'Official Frever Star Creator',
+        BioLinks: {},
+        IsMinor: false,
+        AllowChat: true
+      }
+    ]
+  };
+}
+
 export function emptyArray(ctx) {
   authenticate(ctx, false);
   return { body: [] };
 }
 
+function readAssetListFile(filename) {
+  const file = path.join(path.dirname(config.dbPath), 'assets', filename);
+  try {
+    if (!fs.existsSync(file)) return [];
+    return fs.readFileSync(file, 'utf8')
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('#'));
+  } catch {
+    return [];
+  }
+}
+
+export function assetMaps(ctx) {
+  authenticate(ctx, false);
+  return { body: { maps: readAssetListFile('maps.txt') } };
+}
+
+export function assetAnimations(ctx) {
+  authenticate(ctx, false);
+  return { body: { animations: readAssetListFile('animations.txt') } };
+}
+
 export function pastRewards(ctx) {
   authenticate(ctx, false);
   return { body: claimPastRewards() };
+}
+
+export function bakingCharacters(ctx) {
+  authenticate(ctx, false);
+  return { body: [] };
+}
+
+export function moderationWardrobeAvailability(ctx) {
+  authenticate(ctx, false);
+  return { body: { IsAvailable: true } };
+}
+
+export function crewsList(ctx) {
+  authenticate(ctx, false);
+  return { body: [] };
+}
+
+export function questsList(ctx) {
+  authenticate(ctx, false);
+  return { body: [] };
+}
+
+export function moderationReasons(ctx) {
+  authenticate(ctx, false);
+  return { body: ['Inappropriate Content', 'Spam', 'Harassment', 'Other'] };
+}
+
+export function inAppPurchaseOffers(ctx) {
+  authenticate(ctx, false);
+  return { body: [] };
 }

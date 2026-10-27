@@ -72,6 +72,7 @@ function lanAddresses() {
 }
 
 export function buildState(db) {
+  const nodeEngineReq = '22.13.0';
   const [major, minor] = process.versions.node.split('.').map(Number);
   const nodeOk = major > 22 || (major === 22 && minor >= 13);
   const accounts = db.prepare('SELECT id, username FROM users ORDER BY id').all().map((u) => ({ id: u.id, username: u.username }));
@@ -79,10 +80,18 @@ export function buildState(db) {
   const papk = readJson(statusFile, { state: 'never-run', steps: [] });
   const ips = lanAddresses();
   const download = papk.state === 'ok' && papk.output && fs.existsSync(path.join(outDir, papk.output));
+  let capturedCount = 0;
+  try {
+    const captureDir = path.join(root, 'data', 'capture');
+    if (fs.existsSync(captureDir)) {
+      capturedCount = fs.readdirSync(captureDir).filter(f => f.endsWith('.json')).length;
+    }
+  } catch {}
   return {
-    server: { running: true, startedAt, uptimeSeconds: Math.round(process.uptime()), host: config.host, port: config.port, node: process.versions.node },
+    server: { running: true, startedAt, uptimeSeconds: Math.round(process.uptime()), host: config.host, port: config.port, node: process.versions.node, nodeEngineReq },
+    capturedCount,
     checklist: [
-      { id: 'dependencies', label: 'Dependencies (Node 22.13+)', ok: nodeOk, detail: `node ${process.versions.node}`, command: 'bash scripts/setup-termux.sh' },
+      { id: 'dependencies', label: `Dependencies (Node ${nodeEngineReq}+)`, ok: nodeOk, detail: `node ${process.versions.node}`, command: 'bash scripts/setup-termux.sh' },
       { id: 'database', label: 'Database and accounts', ok: accounts.length >= 2, detail: `${accounts.length} accounts`, command: 'npm run seed' },
       { id: 'server', label: 'Server running', ok: true, detail: `port ${config.port}`, command: 'bash scripts/start.sh' },
       { id: 'tests', label: 'Tests passing', ok: tests ? tests.ok : null, detail: tests ? `${tests.ok ? 'passed' : 'FAILED'} at ${tests.at}` : 'not run yet', command: 'npm run test:record' }
@@ -122,8 +131,10 @@ export async function handleDashboard({ req, res, method, path: p, db, body = {}
     if (running) return { status: 409, bytes: send(res, 409, 'application/json', JSON.stringify({ error: 'already running' })) };
     // The body was already parsed by the server before routing.
     const url = body && typeof body === 'object' ? String(body.url || '') : '';
+    const apkPath = body && typeof body === 'object' ? String(body.apkPath || '') : '';
     const args = [path.join(root, 'scripts', 'papk.mjs')];
     if (url) args.push('--url', url);
+    if (apkPath) args.push('--apk', apkPath);
     spawn(process.execPath, args, { cwd: root, detached: true, stdio: 'ignore' }).unref();
     return { status: 202, bytes: send(res, 202, 'application/json', JSON.stringify({ started: true })) };
   }
