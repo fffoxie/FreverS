@@ -10,78 +10,75 @@
 
 ## 1. Quick Termux Installation Guide (Run Once on Android)
 
-Follow these exact steps in Termux on your phone. You only need to run the setup **once**.
+Follow these exact steps in Termux on your phone. You only need to perform the setup **once**. Once complete, the server runs permanently on your device.
 
 ```bash
-# 1. Update Termux packages
+# Step 1: Update Termux packages
 pkg update -y && pkg install -y git nodejs openjdk-17 python zip unzip curl
 
-# 2. Grant storage access (tap Allow when prompted)
+# Step 2: Grant storage permissions (tap Allow on your phone screen)
 termux-setup-storage
 
-# 3. Clone FreverS
+# Step 3: Clone FreverS repository
 cd ~
 git clone https://github.com/fffoxie/FreverS.git
 cd FreverS
 
-# 4. Run automated setup (seeds database, checks dependencies, builds directories)
+# Step 4: Run automated Termux setup
 bash scripts/setup-termux.sh
 
-# 5. Start the server
+# Step 5: Start the local server
 bash scripts/start.sh
 ```
 
-Once started, open the web dashboard in your phone browser:
+After starting, open the web dashboard in your phone browser:
 **[http://127.0.0.1:8080/dashboard](http://127.0.0.1:8080/dashboard)**
 
 ---
 
-## 2. Get the Original APK (Required for PAPK Creation)
+## 2. Obtain & Patch the Original Frever APK
 
-To patch the app, obtain a clean copy of **Frever 4.0.5 APK or XAPK** (e.g. from APKPure or Google Drive).
+To generate the patched app (PAPK) that points to your local private server:
 
-Place the file on your phone in `~/FreverS/analysis/Frever_4.0.5_APKPure.apk` or in your phone's `Download/` folder:
-
-```bash
-cp ~/storage/downloads/Frever_4.0.5_APKPure.apk ~/FreverS/analysis/Frever_4.0.5_APKPure.apk
-```
-
-Then open the dashboard at `http://127.0.0.1:8080/dashboard`, go to the **PAPK Tool** tab, and tap **Create PAPK**.
-
----
-
-## 3. Creating Custom Assets (VRChat / Blender to Frever)
-
-Frever uses Unity **2022.3.28f1** UMA avatars. Custom characters, outfits, and props can be created and imported:
-
-1. **Blender / VRChat Conversion:** See [`docs/ASSET_CREATION.md`](docs/ASSET_CREATION.md) for skeleton retargeting and ARKit 52 blendshape guidelines.
-2. **Importing Bundles:** Ingest custom `.fbx` or AssetBundle files locally using:
+1. Obtain a clean copy of **Frever 4.0.5 APK or XAPK**.
+2. Place the file on your phone in `~/FreverS/analysis/Frever_4.0.5_APKPure.apk` or in your device's `Download/` folder:
    ```bash
-   node scripts/import-assets.mjs <path-to-bundle-or-folder>
+   cp ~/storage/downloads/Frever_4.0.5_APKPure.apk ~/FreverS/analysis/Frever_4.0.5_APKPure.apk
    ```
+3. Open the web control panel at `http://127.0.0.1:8080/dashboard`, navigate to **PAPK Tool**, and tap **Create PAPK**.
 
 ---
 
-## 4. Troubleshooting Matrix
+## 3. Star Creators, Custom Assets & Advanced Customization
 
-| Error / Issue | Exact Fix Command |
+- **Star Creators:** Included by default! Calling `/group/star-creators-in-your-country` returns available Star Creator profiles.
+- **Custom VRChat Avatars, Clothing & Maps:** Full retargeting, Blender FBX import, ARKit 52 facial blendshape sliders, and custom map scene guidelines are documented in detail in [`docs/ASSET_CREATION.md`](docs/ASSET_CREATION.md).
+- **Importing Bundles:** Ingest custom AssetBundle files locally using:
+  ```bash
+  node scripts/import-assets.mjs <path-to-bundle-or-folder>
+  ```
+
+---
+
+## 4. Comprehensive Troubleshooting Matrix
+
+| Error / Issue | Description & Exact Remediation Command |
 | --- | --- |
-| Mirror errors in Termux | `termux-change-repo` (select a main mirror) |
-| Server stops when screen turns off | `termux-wake-lock` and disable battery optimization for Termux |
-| Missing original APK error | Copy APK into `analysis/Frever_4.0.5_APKPure.apk` or specify path in dashboard |
-| Port 8080 busy | `export FREVERS_PORT=8081 && bash scripts/start.sh` |
-| Diagnostics & Health Check | `bash scripts/doctor.sh` |
-| Check for tracked secret files | `bash scripts/check-no-secrets.sh` |
+| Termux Mirror Errors | Run `termux-change-repo` and select a working main repository mirror. |
+| Server Dies When Screen Locks | Run `termux-wake-lock` and disable battery optimization for Termux in Android Settings. |
+| Missing Original APK Error | Copy your Frever APK into `analysis/Frever_4.0.5_APKPure.apk` or specify path in the PAPK control panel. |
+| Port 8080 Already Busy | Run `export FREVERS_PORT=8081 && bash scripts/start.sh` |
+| System Health Diagnostics | Run `bash scripts/doctor.sh` to test Git, Node version, SQLite DB, port, and unit tests. |
+| Security & Secrets Check | Run `bash scripts/check-no-secrets.sh` to verify no sensitive keys or APKs are tracked in git. |
 
 ---
 
-## 5. Running on Linux / PC
+## 5. Running on Linux / Desktop PC
 
-On Linux, macOS, or Windows WSL:
 ```bash
 git clone https://github.com/fffoxie/FreverS.git
 cd FreverS
 bash scripts/setup-termux.sh
 bash scripts/start.sh
 ```
-Open **`http://127.0.0.1:8080/dashboard`** in your desktop browser.
+Open **`http://127.0.0.1:8080/dashboard`** in your browser.
