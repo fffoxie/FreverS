@@ -1,0 +1,49 @@
+# Local analysis artifacts (never committed)
+analysis/
+*.apk
+*.xapk
+*.apks
+*.zip
+*.so
+*.dex
+*.dat
+dump.cs
+script.json
+stringliteral.json
+
+# Extracted game assets
+assets/
+jadx-out/
+jadx-res/
+cpp2il_out/
+
+# Local database, logs, and output
+data/
+output/
+logs/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+credentials.txt
+generated-credentials.txt
+
+# Keystores and credentials
+keystores/
+*.keystore
+*.jks
+.frevers/
+
+# Node
+node_modules/
+npm-debug.log*
+coverage/
+
+# Editors / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Agent session state
+.cline-home/
