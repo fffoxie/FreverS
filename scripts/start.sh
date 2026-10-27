@@ -16,19 +16,23 @@ fi
 PORT="${FREVERS_PORT:-${PORT:-8080}}"
 HOST="${FREVERS_HOST:-0.0.0.0}"
 
-# Check if port is already in use
+# Check if port is already in use using available tools (lsof, nc, ss, netstat).
+# If none of these tools are present, Node.js will fall back to catching EADDRINUSE during startup.
+PORT_BUSY=0
 if command -v lsof >/dev/null 2>&1; then
-  if lsof -i :"$PORT" >/dev/null 2>&1; then
-    echo "[start] ERROR: Port $PORT is already in use." >&2
-    echo "[start] FIX: Stop the process using port $PORT, or run with 'FREVERS_PORT=8081 bash scripts/start.sh'." >&2
-    exit 1
-  fi
+  lsof -i :"$PORT" >/dev/null 2>&1 && PORT_BUSY=1
 elif command -v nc >/dev/null 2>&1; then
-  if nc -z 127.0.0.1 "$PORT" >/dev/null 2>&1; then
-    echo "[start] ERROR: Port $PORT is already in use." >&2
-    echo "[start] FIX: Stop the process using port $PORT, or run with 'FREVERS_PORT=8081 bash scripts/start.sh'." >&2
-    exit 1
-  fi
+  nc -z 127.0.0.1 "$PORT" >/dev/null 2>&1 && PORT_BUSY=1
+elif command -v ss >/dev/null 2>&1; then
+  ss -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
+elif command -v netstat >/dev/null 2>&1; then
+  netstat -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
+fi
+
+if [ "$PORT_BUSY" -eq 1 ]; then
+  echo "[start] ERROR: Port $PORT is already in use." >&2
+  echo "[start] FIX: Stop the process using port $PORT, or run with 'FREVERS_PORT=8081 bash scripts/start.sh'." >&2
+  exit 1
 fi
 
 # Keep the CPU awake while the server runs (Termux only, best effort).
