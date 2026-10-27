@@ -71,7 +71,9 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
           path,
           bodySize: parsed.raw.length,
           contentType: req.headers['content-type'],
-          preview
+          preview,
+          raw: parsed.raw,
+          headers: req.headers
         });
         const body = Buffer.from(
           JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${path}` })

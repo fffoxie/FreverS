@@ -264,6 +264,21 @@ describe('social, profile and fallback endpoints', () => {
     const body = await response.json();
     assert.equal(body.error, 'not_found');
   });
+
+  test('FREVERS_CAPTURE=1 captures unknown request', async () => {
+    const orig = process.env.FREVERS_CAPTURE;
+    process.env.FREVERS_CAPTURE = '1';
+    try {
+      const response = await fetch(`${ctx.baseUrl}/unknown/capture-test`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ capture: 'test' })
+      });
+      assert.equal(response.status, 404);
+    } finally {
+      process.env.FREVERS_CAPTURE = orig;
+    }
+  });
 });
 
 
