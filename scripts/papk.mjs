@@ -127,16 +127,16 @@ export function createPapk({ url = lanUrl(), apkPath, statusPath = statusFile, l
 
 function runSteps({ status, step, url, out, apk }) {
   let tools;
+  step('check-target-url', () => {
+    if (!/^http:\/\/[A-Za-z0-9.\-]+(:\d+)?\/$/.test(url)) throw new Error(`bad URL ${url}`);
+    if (url.length > 36) throw new Error(`URL ${url} is ${url.length} chars; the production literal holds 36`);
+    return `${url} (${url.length} chars; production literal 36)`;
+  });
   step('locate-original-apk', () => {
     if (!fs.existsSync(apk)) throw new Error(`original APK not found at ${apk}`);
     const sum = md5(apk);
     if (sum !== ORIGINAL_MD5) throw new Error(`MD5 ${sum} != expected ${ORIGINAL_MD5}`);
     return `${apk} md5=${sum}`;
-  });
-  step('check-target-url', () => {
-    if (!/^http:\/\/[A-Za-z0-9.\-]+(:\d+)?\/$/.test(url)) throw new Error(`bad URL ${url}`);
-    if (url.length > 36) throw new Error(`URL ${url} is ${url.length} chars; the production literal holds 36`);
-    return `${url} (${url.length} chars; production literal 36)`;
   });
   step('check-tools', () => {
     tools = findTools();
