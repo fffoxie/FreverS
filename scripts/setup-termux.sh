@@ -26,8 +26,8 @@ fi
 if command -v pkg >/dev/null 2>&1; then
   echo "[setup] updating package lists..."
   pkg update -y
-  echo "[setup] installing nodejs git openjdk-17 apktool apksigner..."
-  pkg install -y nodejs git openjdk-17 apktool apksigner
+  echo "[setup] installing nodejs git openjdk-21 apktool apksigner..."
+  pkg install -y nodejs git openjdk-21 apktool apksigner
 else
   echo "[setup] 'pkg' not found; skipping apt install. Ensure node >= 22.13, git and java are available."
 fi

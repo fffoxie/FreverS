@@ -82,11 +82,11 @@ export function readStatus(file = statusFile) {
   }
 }
 
-export function outputPath() {
-  return path.join(outDir, OUTPUT_NAME);
+export function outputPath(dir = outDir) {
+  return path.join(dir, OUTPUT_NAME);
 }
 
-export function createPapk({ url = lanUrl(), apkPath, statusPath = statusFile, logPath = logFile } = {}) {
+export function createPapk({ url = lanUrl(), apkPath, statusPath = statusFile, logPath = logFile, out = outDir } = {}) {
   const status = { state: 'running', url, startedAt: new Date().toISOString(), steps: [] };
   fs.mkdirSync(path.dirname(logPath), { recursive: true });
   const save = () => fs.writeFileSync(statusPath, JSON.stringify(status, null, 2));
@@ -112,20 +112,20 @@ export function createPapk({ url = lanUrl(), apkPath, statusPath = statusFile, l
       throw error;
     }
   };
-  fs.rmSync(outputPath(), { force: true });
+  fs.rmSync(outputPath(out), { force: true });
   try {
-    runSteps({ status, step, url, apk: apkPath || path.join(analysisDir, 'Frever_4.0.5_APKPure.apk') });
+    runSteps({ status, step, url, out, apk: apkPath || path.join(analysisDir, 'Frever_4.0.5_APKPure.apk') });
     status.state = 'ok';
     status.finishedAt = new Date().toISOString();
     save();
   } catch {
     // status already records the failing step; no output APK is produced
-    fs.rmSync(outputPath(), { force: true });
+    fs.rmSync(outputPath(out), { force: true });
   }
   return status;
 }
 
-function runSteps({ status, step, url, apk }) {
+function runSteps({ status, step, url, out, apk }) {
   let tools;
   step('locate-original-apk', () => {
     if (!fs.existsSync(apk)) throw new Error(`original APK not found at ${apk}`);
@@ -188,7 +188,7 @@ function runSteps({ status, step, url, apk }) {
   });
   step('sign', () => {
     const pass = fs.readFileSync(passFile, 'utf8').trim();
-    fs.mkdirSync(outDir, { recursive: true });
+    fs.mkdirSync(out, { recursive: true });
     const signedTmp = path.join(workDir, 'signed.apk');
     if (tools.apksigner.kind === 'apksigner') {
       run(tools.apksigner.cmd, ['sign', '--ks', keystore, '--ks-pass', `file:${passFile}`, '--ks-key-alias', 'frevers', '--out', signedTmp, unsigned]);
@@ -200,13 +200,13 @@ function runSteps({ status, step, url, apk }) {
       if (!f) throw new Error('signer produced no APK');
       fs.copyFileSync(path.join(dir, f), signedTmp);
     }
-    fs.copyFileSync(signedTmp, outputPath());
-    return outputPath();
+    fs.copyFileSync(signedTmp, outputPath(out));
+    return outputPath(out);
   });
   step('md5', () => {
     status.output = OUTPUT_NAME;
-    status.md5 = md5(outputPath());
-    status.size = fs.statSync(outputPath()).size;
+    status.md5 = md5(outputPath(out));
+    status.size = fs.statSync(outputPath(out)).size;
     return `${status.md5} ${status.size} bytes`;
   });
 }

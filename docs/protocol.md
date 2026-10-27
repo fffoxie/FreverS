@@ -23,6 +23,10 @@ This wrapper behaviour is high-confidence but was not device-tested.
 | Develop (4) | `https://dev.frever-api.com/` |
 | ProductionUSA (5) | `https://content-prod-us.frever-api.com/` |
 
+The literals live in the IL2CPP string-literal table as `{length, dataOffset}`
+entries with no in-blob length prefix (measured: see `docs/papk.md` §1), which is
+why a shorter local URL can replace them in place and a longer one cannot.
+
 `AuthConfig` stores `Host` and `IdentityServerURL = CombineUrls(Host, "auth")`.
 `AuthService.AuthUrl` is `AddApiVersion(IdentityServerURL, ApiVersion)`.
 `AuthService.BuildUrl(path)` prefixes `api/`; service calls concatenate

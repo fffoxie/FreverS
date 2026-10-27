@@ -112,6 +112,11 @@ export async function handleDashboard({ req, res, method, path: p, db, body = {}
     return { status: 200, bytes: send(res, 200, 'application/json', JSON.stringify(buildState(db))) };
   }
   if (p === '/dashboard/api/papk' && method === 'POST') {
+    // Building an APK is a local action: only loopback / LAN clients may trigger it.
+    const remote = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+    if (!/^(127\.|::1$|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(remote)) {
+      return { status: 403, bytes: send(res, 403, 'application/json', JSON.stringify({ error: 'local network only' })) };
+    }
     const current = readJson(statusFile, { state: 'never-run' });
     const running = current.state === 'running' && Date.now() - Date.parse(current.startedAt) < 15 * 60 * 1000;
     if (running) return { status: 409, bytes: send(res, 409, 'application/json', JSON.stringify({ error: 'already running' })) };

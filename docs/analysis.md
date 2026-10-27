@@ -189,9 +189,18 @@ There is a separate OAuth-style `POST <auth base>/connect/token` call for login
 - On Android 7+ (and especially targetSdk 34), **user-installed CAs are not
   trusted by apps** unless the app opts in via `network_security_config`. A DNS
   override plus a user CA therefore does not work on an unmodified APK.
+### 8.1 Measured host-literal layout (updates the earlier assumption)
+
+Measured directly on `global-metadata.dat` (metadata version 29): the string
+literal table at header offset 8 holds 8-byte `{length, dataOffset}` entries and
+the text itself has **no length prefix**. The five hosts are packed back-to-back
+(offsets 1,072,069–1,072,244, lengths 27–39), so a **shorter or equal-length**
+replacement works in place and a longer one cannot. The measured table, entry
+indexes and the patch tool are in [`docs/papk.md`](papk.md) §1.
+
 - Minimum to redirect the analysed client:
-  1. Patch the APK to point the five environment hosts at the server (IL2CPP
-     string patch or runtime hook), and
+  1. Patch the APK to point the five environment hosts at the server (in-place
+     literal patch, see `docs/papk.md`; the URL must be <= 36 characters), and
   2. patch the manifest to allow cleartext (`android:usesCleartextTraffic="true"`
      or a `network_security_config` that trusts the local CA), or use a
      system-CA install on a rooted device with a man-in-the-middle proxy.

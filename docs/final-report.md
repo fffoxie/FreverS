@@ -1,5 +1,9 @@
 # Final report
 
+> Superseded by [`docs/status.md`](status.md), which covers phases 3–5 as well.
+> The endpoint and reverse-engineering findings below still apply.
+
+
 ## Endpoints found
 
 Phase 1 confirmed **321 methods** with path-like literals. The ones relevant to

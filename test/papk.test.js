@@ -10,7 +10,7 @@ const statusPath = path.join(dir, 'status.json');
 const logPath = path.join(dir, 'papk.log');
 
 function run(opts) {
-  return createPapk({ statusPath, logPath, ...opts });
+  return createPapk({ statusPath, logPath, out: path.join(dir, 'out'), ...opts });
 }
 
 test('papk stops at locate-original-apk when the APK is missing', () => {
