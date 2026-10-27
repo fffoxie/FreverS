@@ -80,8 +80,16 @@ export function buildState(db) {
   const papk = readJson(statusFile, { state: 'never-run', steps: [] });
   const ips = lanAddresses();
   const download = papk.state === 'ok' && papk.output && fs.existsSync(path.join(outDir, papk.output));
+  let capturedCount = 0;
+  try {
+    const captureDir = path.join(root, 'data', 'capture');
+    if (fs.existsSync(captureDir)) {
+      capturedCount = fs.readdirSync(captureDir).filter(f => f.endsWith('.json')).length;
+    }
+  } catch {}
   return {
     server: { running: true, startedAt, uptimeSeconds: Math.round(process.uptime()), host: config.host, port: config.port, node: process.versions.node, nodeEngineReq },
+    capturedCount,
     checklist: [
       { id: 'dependencies', label: `Dependencies (Node ${nodeEngineReq}+)`, ok: nodeOk, detail: `node ${process.versions.node}`, command: 'bash scripts/setup-termux.sh' },
       { id: 'database', label: 'Database and accounts', ok: accounts.length >= 2, detail: `${accounts.length} accounts`, command: 'npm run seed' },

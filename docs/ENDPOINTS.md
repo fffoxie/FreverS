@@ -21,3 +21,9 @@
 | `me` | `GET` | `/me` | SocialService.CurrentUserProfileInternal | `implemented` |
 | `me-balance` | `GET` | `/me/balance` | SocialService.GetUserBalance | `implemented` |
 | `health` | `GET` | `/health` | Local health probe (not called by the game) | `implemented` |
+| `baking-characters` | `GET` | `/baking/characters` | Wardrobe and character baking list | `implemented` |
+| `moderation-wardrobe-availability` | `GET` | `/moderation/wardrobe/baking/availability` | Check wardrobe baking availability | `implemented` |
+| `crew-top` | `GET` | `/crew/top` | Crew top and chat endpoints | `implemented` |
+| `quests` | `GET` | `/quest` | Quests and daily quest endpoints | `implemented` |
+| `moderation-reasons` | `GET` | `/moderation/reasons` | List moderation report reasons | `implemented` |
+| `iap-offers` | `GET` | `/purchase/in-app-purchase/offers` | In-app purchase offers (returns empty list, all unlocked) | `implemented` |
