@@ -1,4 +1,7 @@
 import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { config as globalConfig } from './config.js';
 import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
@@ -53,13 +56,61 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     let bytes = 0;
     let note = '';
     try {
-      const dashboard = await handleDashboard({ req, res, method, path, db, body: parsed.body });
-      if (dashboard) {
-        status = dashboard.status;
-        bytes = dashboard.bytes;
-        note = 'dashboard';
+      if (path.startsWith('/assets/') || path.startsWith('/media/')) {
+        const rootDir = path.dirname(globalConfig.dbPath);
+        const relPath = path.startsWith('/assets/') ? path.slice(8) : path.slice(7);
+        const safeBase = path.startsWith('/assets/') ? path.join(rootDir, 'assets') : path.join(rootDir, 'videos');
+        const targetPath = path.resolve(safeBase, relPath);
+        if (!targetPath.startsWith(safeBase) || !fs.existsSync(targetPath) || fs.statSync(targetPath).isDirectory()) {
+          sendJson(res, 404, { error: 'not_found', error_description: 'Asset not found' });
+          status = 404;
+        } else {
+          const stat = fs.statSync(targetPath);
+          const content = fs.readFileSync(targetPath);
+          const etag = `"${createHash('md5').update(content).digest('hex')}"`;
+          if (req.headers['if-none-match'] === etag) {
+            res.writeHead(304, { ETag: etag });
+            res.end();
+            status = 304;
+          } else {
+            const range = req.headers.range;
+            if (range) {
+              const parts = range.replace(/bytes=/, '').split('-');
+              const start = parseInt(parts[0], 10);
+              const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+              const chunksize = end - start + 1;
+              res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': 'application/octet-stream',
+                ETag: etag
+              });
+              res.end(content.subarray(start, end + 1));
+              status = 206;
+              bytes = chunksize;
+            } else {
+              res.writeHead(200, {
+                'Content-Length': stat.size,
+                'Content-Type': 'application/octet-stream',
+                'Accept-Ranges': 'bytes',
+                ETag: etag
+              });
+              res.end(content);
+              status = 200;
+              bytes = stat.size;
+            }
+          }
+          note = 'asset';
+        }
       } else {
-      const match = matchEndpoint(method, path);
+        const dashboard = await handleDashboard({ req, res, method, path, db, body: parsed.body });
+        if (dashboard) {
+          status = dashboard.status;
+          bytes = dashboard.bytes;
+          note = 'dashboard';
+        } else {
+        const match = matchEndpoint(method, path);
       if (!match) {
         status = 404;
         const preview =
@@ -71,7 +122,9 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
           path,
           bodySize: parsed.raw.length,
           contentType: req.headers['content-type'],
-          preview
+          preview,
+          raw: parsed.raw,
+          headers: req.headers
         });
         const body = Buffer.from(
           JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${path}` })
@@ -111,6 +164,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
         res.end(body);
         bytes = body.length;
         note = ctx.logNote || '';
+      }
       }
       }
     } catch (error) {

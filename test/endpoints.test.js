@@ -202,10 +202,13 @@ describe('social, profile and fallback endpoints', () => {
     assert.ok(Array.isArray(await response.json()));
   });
 
-  test('GET /group/star-creators-in-your-country returns an array', async () => {
+  test('GET /group/star-creators-in-your-country returns star creator profile array', async () => {
     const response = await authedGet(ctx.baseUrl, token, '/group/star-creators-in-your-country');
     assert.equal(response.status, 200);
-    assert.ok(Array.isArray(await response.json()));
+    const body = await response.json();
+    assert.ok(Array.isArray(body));
+    assert.equal(body.length, 1);
+    assert.equal(body[0].NickName, 'Star Creator');
   });
 
   test('GET /group/frever-official returns the Profile shape', async () => {
@@ -254,6 +257,18 @@ describe('social, profile and fallback endpoints', () => {
     assert.equal(body.status, 'ok');
   });
 
+  test('GET /baking/characters returns baking array', async () => {
+    const response = await authedGet(ctx.baseUrl, token, '/baking/characters');
+    assert.equal(response.status, 200);
+    assert.ok(Array.isArray(await response.json()));
+  });
+
+  test('GET /purchase/in-app-purchase/offers returns empty array', async () => {
+    const response = await authedGet(ctx.baseUrl, token, '/purchase/in-app-purchase/offers');
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), []);
+  });
+
   test('unknown route returns 404 and is logged', async () => {
     const response = await fetch(`${ctx.baseUrl}/nope/does-not-exist`, {
       method: 'POST',
@@ -263,6 +278,21 @@ describe('social, profile and fallback endpoints', () => {
     assert.equal(response.status, 404);
     const body = await response.json();
     assert.equal(body.error, 'not_found');
+  });
+
+  test('FREVERS_CAPTURE=1 captures unknown request', async () => {
+    const orig = process.env.FREVERS_CAPTURE;
+    process.env.FREVERS_CAPTURE = '1';
+    try {
+      const response = await fetch(`${ctx.baseUrl}/unknown/capture-test`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ capture: 'test' })
+      });
+      assert.equal(response.status, 404);
+    } finally {
+      process.env.FREVERS_CAPTURE = orig;
+    }
   });
 });
 
