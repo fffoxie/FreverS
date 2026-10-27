@@ -3,6 +3,7 @@ import { config as globalConfig } from './config.js';
 import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
 import { setPublicBaseUrl } from './models.js';
+import { handleDashboard } from './dashboard.js';
 import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown } from './http.js';
 
 function errorPayload(error) {
@@ -52,6 +53,12 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     let bytes = 0;
     let note = '';
     try {
+      const dashboard = await handleDashboard({ req, res, method, path, db });
+      if (dashboard) {
+        status = dashboard.status;
+        bytes = dashboard.bytes;
+        note = 'dashboard';
+      } else {
       const match = matchEndpoint(method, path);
       if (!match) {
         status = 404;
@@ -104,6 +111,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
         res.end(body);
         bytes = body.length;
         note = ctx.logNote || '';
+      }
       }
     } catch (error) {
       const { status: errorStatus, payload } = errorPayload(error);
