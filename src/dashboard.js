@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { config } from './config.js';
-import { logFilePath, parseRequestBody } from './http.js';
+import { logFilePath } from './http.js';
 import { renderPage } from './dashboard-page.js';
 
 const root = config.rootDir;
@@ -63,7 +63,10 @@ function tailLines(file, n) {
 function lanAddresses() {
   const out = [];
   for (const list of Object.values(os.networkInterfaces())) {
-    for (const i of list || []) if (i.family === 'IPv4' && !i.internal) out.push(i.address);
+    for (const i of list || []) {
+      // Only RFC1918 LAN addresses: a phone will use one of these.
+      if (i.family === 'IPv4' && !i.internal && /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(i.address)) out.push(i.address);
+    }
   }
   return out;
 }
@@ -100,7 +103,7 @@ function send(res, status, type, body, headers = {}) {
 }
 
 /** Returns { status, bytes } when the request belongs to the dashboard, otherwise null. */
-export async function handleDashboard({ req, res, method, path: p, db }) {
+export async function handleDashboard({ req, res, method, path: p, db, body = {} }) {
   if (p === '/dashboard' || p === '/dashboard/') {
     if (method !== 'GET') return { status: 405, bytes: send(res, 405, 'text/plain', 'method not allowed') };
     return { status: 200, bytes: send(res, 200, 'text/html; charset=utf-8', renderPage()) };
@@ -112,12 +115,8 @@ export async function handleDashboard({ req, res, method, path: p, db }) {
     const current = readJson(statusFile, { state: 'never-run' });
     const running = current.state === 'running' && Date.now() - Date.parse(current.startedAt) < 15 * 60 * 1000;
     if (running) return { status: 409, bytes: send(res, 409, 'application/json', JSON.stringify({ error: 'already running' })) };
-    let url = '';
-    try {
-      url = String((await parseRequestBody(req)).body.url || '');
-    } catch {
-      url = '';
-    }
+    // The body was already parsed by the server before routing.
+    const url = body && typeof body === 'object' ? String(body.url || '') : '';
     const args = [path.join(root, 'scripts', 'papk.mjs')];
     if (url) args.push('--url', url);
     spawn(process.execPath, args, { cwd: root, detached: true, stdio: 'ignore' }).unref();

@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const result = spawnSync(process.execPath, ['--test', 'test/'], { cwd: root, encoding: 'utf8', stdio: 'inherit' });
+const result = spawnSync(process.execPath, ['--test', 'test/*.test.js'], { cwd: root, encoding: 'utf8', stdio: 'inherit' });
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 fs.writeFileSync(
   path.join(root, 'data', 'test-status.json'),

@@ -64,8 +64,8 @@ echo "[setup] running the test suite..."
 npm run --silent test:record
 
 if [ ! -f analysis/Frever_4.0.5_APKPure.apk ]; then
-  echo "[setup] note: analysis/Frever_4.0.5_APKPure.apk is missing, so Create PAPK\
- will fail until you copy the original APK there (it is git-ignored)."
+  echo "[setup] note: analysis/Frever_4.0.5_APKPure.apk is missing."
+  echo "[setup]       Create PAPK will fail until you copy the original APK there (git-ignored)."
 fi
 
 echo

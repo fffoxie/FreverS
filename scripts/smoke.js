@@ -15,7 +15,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const baseUrl = (process.env.FREVERS_URL || process.env.FREVERS_PUBLIC_BASE_URL || 'http://127.0.0.1:8080').replace(/\/+$/, '');
+const defaultPort = process.env.FREVERS_PORT || process.env.PORT || '8080';
+const baseUrl = (process.env.FREVERS_URL || process.env.FREVERS_PUBLIC_BASE_URL || `http://127.0.0.1:${defaultPort}`).replace(/\/+$/, '');
 
 function credentialsFromFile(username) {
   const file = path.join(root, 'data', 'generated-credentials.txt');
@@ -55,7 +56,9 @@ async function json(response) {
 
 const health = await fetch(`${baseUrl}/health`).catch((error) => fail(`server not reachable at ${baseUrl}`, error.message));
 if (!health || !health.ok) fail(`health check failed (${health && health.status})`);
-console.log(`health: ${health.status}`);
+const healthBody = await json(health);
+if (healthBody.service !== 'frevers') fail(`port ${baseUrl} is answering but is not FreverS`, healthBody);
+console.log(`health: ${health.status} (${healthBody.service})`);
 
 const loginResponse = await fetch(`${baseUrl}/connect/token`, {
   method: 'POST',

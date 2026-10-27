@@ -24,7 +24,9 @@ const OUTPUT_NAME = 'Frever_4.0.5_FreverS.apk';
 export function lanUrl(port = process.env.FREVERS_PORT || process.env.PORT || 8080) {
   for (const list of Object.values(os.networkInterfaces())) {
     for (const i of list || []) {
-      if (i.family === 'IPv4' && !i.internal) return `http://${i.address}:${port}/`;
+      if (i.family === 'IPv4' && !i.internal && /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(i.address)) {
+        return `http://${i.address}:${port}/`;
+      }
     }
   }
   return `http://127.0.0.1:${port}/`;
@@ -72,9 +74,9 @@ function findTools() {
   return { java, apktool, apksigner, keytool };
 }
 
-export function readStatus() {
+export function readStatus(file = statusFile) {
   try {
-    return JSON.parse(fs.readFileSync(statusFile, 'utf8'));
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch {
     return { state: 'never-run', steps: [] };
   }
@@ -84,11 +86,11 @@ export function outputPath() {
   return path.join(outDir, OUTPUT_NAME);
 }
 
-export function createPapk({ url = lanUrl(), apkPath } = {}) {
+export function createPapk({ url = lanUrl(), apkPath, statusPath = statusFile, logPath = logFile } = {}) {
   const status = { state: 'running', url, startedAt: new Date().toISOString(), steps: [] };
-  fs.mkdirSync(path.dirname(logFile), { recursive: true });
-  const save = () => fs.writeFileSync(statusFile, JSON.stringify(status, null, 2));
-  const log = (m) => fs.appendFileSync(logFile, `${new Date().toISOString()} ${m}\n`);
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  const save = () => fs.writeFileSync(statusPath, JSON.stringify(status, null, 2));
+  const log = (m) => fs.appendFileSync(logPath, `${new Date().toISOString()} ${m}\n`);
   const step = (name, fn) => {
     const entry = { name, state: 'running' };
     status.steps.push(entry);

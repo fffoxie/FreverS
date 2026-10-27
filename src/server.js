@@ -53,7 +53,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     let bytes = 0;
     let note = '';
     try {
-      const dashboard = await handleDashboard({ req, res, method, path, db });
+      const dashboard = await handleDashboard({ req, res, method, path, db, body: parsed.body });
       if (dashboard) {
         status = dashboard.status;
         bytes = dashboard.bytes;
