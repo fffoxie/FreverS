@@ -29,17 +29,21 @@ else
   FAILED=1
 fi
 
-# Check 3: Node version >= 22.13.0
-echo -n "[check] Node.js version >= 22.13.0: "
+# Check 3: Node version check against package.json requirement
+echo -n "[check] Node.js version check: "
 if command -v node >/dev/null 2>&1; then
   NODE_VERSION="$(node -p 'process.versions.node')"
+  REQ_NODE="$(node -p 'try { JSON.parse(require("fs").readFileSync("package.json")).engines.node.replace(/[^0-9.]/g, "") } catch { "22.13.0" }')"
+  REQ_MAJOR="$(echo "$REQ_NODE" | cut -d. -f1)"
+  REQ_MINOR="$(echo "$REQ_NODE" | cut -d. -f2)"
   NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
   NODE_MINOR="$(node -p 'process.versions.node.split(".")[1]')"
-  if [ "$NODE_MAJOR" -gt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -ge 13 ]; }; then
-    echo "OK (v$NODE_VERSION)"
+
+  if [ "$NODE_MAJOR" -gt "$REQ_MAJOR" ] || { [ "$NODE_MAJOR" -eq "$REQ_MAJOR" ] && [ "$NODE_MINOR" -ge "$REQ_MINOR" ]; }; then
+    echo "OK (v$NODE_VERSION satisfies package.json >=$REQ_NODE)"
   else
-    echo "FAILED (v$NODE_VERSION is too old)"
-    echo "  FIX: Run 'pkg upgrade -y nodejs' or install Node.js >= 22.13.0"
+    echo "FAILED (v$NODE_VERSION is too old; >=$REQ_NODE required)"
+    echo "  FIX: Run 'pkg upgrade -y nodejs' or install Node.js >=$REQ_NODE"
     FAILED=1
   fi
 else
@@ -48,7 +52,7 @@ else
   FAILED=1
 fi
 
-# Check 4: npm dependencies
+# Check 4: npm dependencies / package.json
 echo -n "[check] npm dependencies / package.json: "
 if [ -f package.json ]; then
   echo "OK (package.json present)"
@@ -75,6 +79,10 @@ if command -v lsof >/dev/null 2>&1; then
   lsof -i :"$PORT" >/dev/null 2>&1 && PORT_BUSY=1
 elif command -v nc >/dev/null 2>&1; then
   nc -z 127.0.0.1 "$PORT" >/dev/null 2>&1 && PORT_BUSY=1
+elif command -v ss >/dev/null 2>&1; then
+  ss -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
+elif command -v netstat >/dev/null 2>&1; then
+  netstat -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
 fi
 
 if [ "$PORT_BUSY" -eq 1 ]; then
@@ -117,6 +125,24 @@ if command -v curl >/dev/null 2>&1; then
   fi
 else
   echo "SKIPPED (curl not installed)"
+fi
+
+# Check 9: Original APK status (PAPK tool prerequisite, non-failing)
+echo -n "[check] Original APK status (analysis/Frever_4.0.5_APKPure.apk): "
+TARGET_APK="analysis/Frever_4.0.5_APKPure.apk"
+if [ -f "$TARGET_APK" ]; then
+  APK_SIZE="$(node -p 'require("fs").statSync("analysis/Frever_4.0.5_APKPure.apk").size')"
+  echo "PRESENT ($APK_SIZE bytes)"
+else
+  echo "MISSING (Optional for server runtime, required for Create PAPK)"
+  CANDIDATE="$(node -e 'import("./scripts/papk.mjs").then(m => { const c = m.findApkCandidates(); if (c[0]) console.log(c[0]); })' 2>/dev/null || true)"
+  if [ -n "$CANDIDATE" ]; then
+    echo "  Found candidate: $CANDIDATE"
+    echo "  FIX: Run 'cp \"$CANDIDATE\" \"$TARGET_APK\"'"
+  else
+    echo "  FIX: Copy your Frever APK to $TARGET_APK"
+    echo "       Example: cp ~/storage/downloads/<your-file>.apk $TARGET_APK"
+  fi
 fi
 
 echo

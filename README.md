@@ -15,7 +15,7 @@ To host FreverS on your phone, you need:
 - **Battery Optimization Settings**:
   - In Android Settings -> Apps -> Termux -> Battery, set to **Unrestricted / Don't Optimize**.
   - In Termux, run `termux-wake-lock` so Android doesn't put the server to sleep when the screen turns off.
-- **Storage Permission** (Optional, for saving APKs or accessing external storage):
+- **Storage Permission**:
   - Run `termux-setup-storage` in Termux and grant permission.
 
 ---
@@ -46,6 +46,50 @@ bash scripts/setup-termux.sh
 ```
 *Expected output*: Checks Node version (requires Node >= 22.13.0), seeds the SQLite database (`data/frever.db`), runs initial tests, and prints setup complete.
 *Time*: ~10 seconds.
+
+### Step 4: Start the server
+```sh
+bash scripts/start.sh
+```
+*Expected output*:
+```text
+[start] Starting FreverS server...
+[start] Local URL: http://127.0.0.1:8080/
+[start] Dashboard: http://127.0.0.1:8080/dashboard
+[start] Phone LAN IP: http://192.168.1.100:8080/
+[frevers] listening on http://0.0.0.0:8080
+```
+
+### Step 5: Open the Dashboard
+Open your phone browser (Chrome, Firefox, etc.) and go to:
+```
+http://127.0.0.1:8080/dashboard
+```
+
+---
+
+## Get the Original APK (For PAPK Creation)
+
+To patch the client using the dashboard's **Create PAPK** tool, copy your downloaded original Frever 4.0.5 APK into the repo's `analysis/` folder on your phone:
+
+### Step 3: Run Termux setup
+```sh
+termux-setup-storage
+ls ~/storage/downloads | grep -i frever
+mkdir -p ~/FreverS/analysis
+cp ~/storage/downloads/<your-file>.apk ~/FreverS/analysis/Frever_4.0.5_APKPure.apk
+```
+*Expected output*: Checks Node version (requires Node >= 22.13.0), seeds the SQLite database (`data/frever.db`), runs initial tests, and prints setup complete.
+*Time*: ~10 seconds.
+
+Then open the dashboard (`http://127.0.0.1:8080/dashboard`), navigate to the **PAPK Tool** tab, and press **Create PAPK**.
+*(Note: The original APK is git-ignored and never committed or uploaded).*
+
+---
+
+## Accounts & Login Details
+
+When setup runs for the first time, two local playtest accounts are created automatically in `data/frever.db`:
 
 ### Step 4: Start the server
 ```sh
@@ -137,6 +181,7 @@ Ensure Node.js >= 22.13.0 is installed on your Linux system. Run `bash scripts/d
 | `FREVERS_HOST` | `0.0.0.0` | Bind address (`0.0.0.0` allows LAN access) |
 | `FREVERS_DB_PATH` | `data/frever.db` | SQLite database file location |
 | `FREVERS_USER1` / `FREVERS_USER2` | `fffoxie` / `friend` | Default seeded account usernames |
+| `FREVERS_ORIGINAL_APK` | `analysis/Frever_4.0.5_APKPure.apk` | Custom path override for original APK |
 
 ---
 
