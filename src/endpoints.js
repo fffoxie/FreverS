@@ -17,7 +17,14 @@ import {
   pastRewards,
   currentUser,
   currentBalance,
-  getGroup
+  getGroup,
+  starCreators,
+  bakingCharacters,
+  moderationWardrobeAvailability,
+  crewsList,
+  questsList,
+  moderationReasons,
+  inAppPurchaseOffers
 } from './handlers-data.js';
 
 /**
@@ -151,7 +158,7 @@ export const endpoints = [
       '/group/star-creators-in-your-country',
       '/group/public/group/star-creators-in-your-country'
     ],
-    handler: emptyArray,
+    handler: starCreators,
     description: 'SocialService.GetStarCreatorsInYourCountry'
   },
   {
@@ -183,82 +190,46 @@ export const endpoints = [
     description: 'Local health probe (not called by the game)'
   },
   {
-    id: 'register-temporary-account',
-    method: 'POST',
-    paths: [
-      '/Account/RegisterTemporaryAccount',
-      '/account/RegisterTemporaryAccount',
-      '/account/registertemporaryaccount',
-      '/api/account/registertemporaryaccount'
-    ],
-    handler: registerTemporaryAccount,
-    description: 'Register/login guest account (AuthService.RegisterTemporaryAccount)'
-  },
-  {
-    id: 'check-parent-email-bound',
+    id: 'baking-characters',
     method: 'GET',
-    paths: [
-      '/account/CheckIfParentEmailBound',
-      '/Account/CheckIfParentEmailBound',
-      '/account/checkifparentemailbound'
-    ],
-    handler: parentalConsent,
-    description: 'Parental consent check (AuthService.CheckIfParentEmailBound)'
+    paths: ['/baking/characters'],
+    handler: bakingCharacters,
+    description: 'Wardrobe and character baking list'
   },
   {
-    id: 'configure-parental-consent',
-    method: 'POST',
-    paths: [
-      '/account/ConfigureParentalConsent',
-      '/Account/ConfigureParentalConsent',
-      '/account/configureparentalconsent'
-    ],
-    handler: parentalConsent,
-    description: 'Configure parental consent (AuthService.ConfigureParentalConsent)'
-  },
-  {
-    id: 'assign-parent-email',
-    method: 'POST',
-    paths: [
-      '/account/assignparentemail',
-      '/Account/AssignParentEmail',
-      '/account/AssignParentEmail'
-    ],
-    handler: parentalConsent,
-    description: 'Assign parent email (AuthService.AssignParentEmail)'
-  },
-  {
-    id: 'verify-parent-email',
-    method: 'POST',
-    paths: [
-      '/account/verifyparentemail',
-      '/Account/VerifyParentEmail',
-      '/account/VerifyParentEmail'
-    ],
-    handler: parentalConsent,
-    description: 'Request parent email verification code (AuthService.RequestParentEmailVerificationCode)'
-  },
-  {
-    id: 'validate-password',
-    method: 'POST',
-    paths: [
-      '/account/ValidatePassword',
-      '/Account/ValidatePassword',
-      '/account/validatepassword'
-    ],
-    handler: validatePassword,
-    description: 'Validate password strength (AuthService.ValidatePasswordStrength)'
-  },
-  {
-    id: 'suggest-nicknames',
+    id: 'moderation-wardrobe-availability',
     method: 'GET',
-    paths: [
-      '/account/suggestnicknames',
-      '/Account/SuggestNicknames',
-      '/account/SuggestNicknames'
-    ],
-    handler: suggestNicknames,
-    description: 'Get suggested nicknames (AuthService.GetSuggestedNicknames)'
+    paths: ['/moderation/wardrobe/baking/availability'],
+    handler: moderationWardrobeAvailability,
+    description: 'Check wardrobe baking availability'
+  },
+  {
+    id: 'crew-top',
+    method: 'GET',
+    paths: ['/crew/top', '/crew/my/chat'],
+    handler: crewsList,
+    description: 'Crew top and chat endpoints'
+  },
+  {
+    id: 'quests',
+    method: 'GET',
+    paths: ['/quest', '/daily-quest'],
+    handler: questsList,
+    description: 'Quests and daily quest endpoints'
+  },
+  {
+    id: 'moderation-reasons',
+    method: 'GET',
+    paths: ['/moderation/reasons'],
+    handler: moderationReasons,
+    description: 'List moderation report reasons'
+  },
+  {
+    id: 'iap-offers',
+    method: 'GET',
+    paths: ['/purchase/in-app-purchase/offers'],
+    handler: inAppPurchaseOffers,
+    description: 'In-app purchase offers (returns empty list, all unlocked)'
   }
 ];
 

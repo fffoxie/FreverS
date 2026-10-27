@@ -177,6 +177,7 @@ li { margin: 4px 0; }
   <button class="tab-btn active" onclick="switchTab('status')" role="tab">Status</button>
   <button class="tab-btn" onclick="switchTab('accounts')" role="tab">Accounts</button>
   <button class="tab-btn" onclick="switchTab('papk')" role="tab">PAPK Tool</button>
+  <button class="tab-btn" onclick="switchTab('assets')" role="tab">Assets</button>
   <button class="tab-btn" onclick="switchTab('settings')" role="tab">Logs & Info</button>
 </nav>
 
@@ -201,9 +202,6 @@ li { margin: 4px 0; }
 
     <h2>API Coverage</h2>
     <div class="card" id="coverage">loading…</div>
-
-    <h2>Unimplemented Endpoints Captured</h2>
-    <div class="card" id="unimplemented">loading…</div>
   </section>
 
   <!-- TAB 3: PAPK Tool -->
@@ -225,6 +223,17 @@ li { margin: 4px 0; }
     </div>
   </section>
 
+  <!-- TAB 4: Assets -->
+  <section id="tab-assets" class="tab-content">
+    <h2>Local Asset Store</h2>
+    <div class="card">
+      <div class="muted">Asset files location: <code>data/assets/</code></div>
+      <div style="margin-top:8px">To import bundles or caches into FreverS:</div>
+      <code>node scripts/import-assets.mjs &lt;path-to-bundle-or-dir&gt;</code>
+    </div>
+  </section>
+
+  <!-- TAB 5: Logs & Info -->
   <!-- TAB 4: Logs & Info -->
   <section id="tab-settings" class="tab-content">
     <h2>Actions & Controls</h2>
