@@ -225,11 +225,35 @@ li { margin: 4px 0; }
 
   <!-- TAB 4: Assets -->
   <section id="tab-assets" class="tab-content">
-    <h2>Local Asset Store</h2>
+    <h2>Local Asset Store & Inventory</h2>
     <div class="card">
       <div class="muted">Asset files location: <code>data/assets/</code></div>
       <div style="margin-top:8px">To import bundles or caches into FreverS:</div>
       <code>node scripts/import-assets.mjs &lt;path-to-bundle-or-dir&gt;</code>
+    </div>
+
+    <h2>Studio Maps Inventory</h2>
+    <div class="card">
+      <ul id="maps-list">
+        <li>map_maya_studio</li>
+        <li>map_main_stage</li>
+        <li>map_beach_set</li>
+        <li>map_urban_street</li>
+        <li>map_sunset_loft</li>
+      </ul>
+      <div class="muted">Text file: <code>data/assets/maps.txt</code></div>
+    </div>
+
+    <h2>Studio Animations Inventory</h2>
+    <div class="card">
+      <ul id="anim-list">
+        <li>anim_idle_default</li>
+        <li>anim_dance_hiphop</li>
+        <li>anim_dance_kpop</li>
+        <li>anim_walk_catwalk</li>
+        <li>anim_wave_hello</li>
+      </ul>
+      <div class="muted">Text file: <code>data/assets/animations.txt</code></div>
     </div>
   </section>
 

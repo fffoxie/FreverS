@@ -27,3 +27,5 @@
 | `quests` | `GET` | `/quest` | Quests and daily quest endpoints | `implemented` |
 | `moderation-reasons` | `GET` | `/moderation/reasons` | List moderation report reasons | `implemented` |
 | `iap-offers` | `GET` | `/purchase/in-app-purchase/offers` | In-app purchase offers (returns empty list, all unlocked) | `implemented` |
+| `asset-maps` | `GET` | `/assets/maps` | List available studio maps inventory | `implemented` |
+| `asset-animations` | `GET` | `/assets/animations` | List available studio animations inventory | `implemented` |

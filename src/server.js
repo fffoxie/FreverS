@@ -56,7 +56,10 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     let bytes = 0;
     let note = '';
     try {
-      if (path.startsWith('/assets/') || path.startsWith('/media/')) {
+      const match = matchEndpoint(method, path);
+      if (match && (match.endpoint.id === 'asset-maps' || match.endpoint.id === 'asset-animations')) {
+        // Fall through to API route handler
+      } else if (path.startsWith('/assets/') || path.startsWith('/media/')) {
         const rootDir = path.dirname(globalConfig.dbPath);
         const relPath = path.startsWith('/assets/') ? path.slice(8) : path.slice(7);
         const safeBase = path.startsWith('/assets/') ? path.join(rootDir, 'assets') : path.join(rootDir, 'videos');
@@ -124,6 +127,13 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
           preview,
           raw: parsed.raw,
           headers: req.headers
+        });
+        const body = Buffer.from(
+          JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${path}` })
+        );
+        res.writeHead(404, {
+          'content-type': 'application/json; charset=utf-8',
+          'content-length': body.length
         });
 
         if (globalConfig.captureMode) {

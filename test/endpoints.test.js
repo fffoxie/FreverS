@@ -291,6 +291,22 @@ describe('social, profile and fallback endpoints', () => {
     assert.deepEqual(await response.json(), []);
   });
 
+  test('GET /assets/maps returns maps list from data/assets/maps.txt', async () => {
+    const response = await authedGet(ctx.baseUrl, token, '/assets/maps');
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.ok(Array.isArray(body.maps));
+    assert.ok(body.maps.length > 0);
+  });
+
+  test('GET /assets/animations returns animations list from data/assets/animations.txt', async () => {
+    const response = await authedGet(ctx.baseUrl, token, '/assets/animations');
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.ok(Array.isArray(body.animations));
+    assert.ok(body.animations.length > 0);
+  });
+
   test('unknown route returns 404 and is logged', async () => {
     const response = await fetch(`${ctx.baseUrl}/nope/does-not-exist`, {
       method: 'POST',

@@ -1,5 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { authenticate } from './handlers-auth.js';
 import { HttpError } from './http.js';
+import { config } from './config.js';
 import {
   supportedVersions,
   servicesUrls,
@@ -104,6 +107,29 @@ export function starCreators(ctx) {
 export function emptyArray(ctx) {
   authenticate(ctx, false);
   return { body: [] };
+}
+
+function readAssetListFile(filename) {
+  const file = path.join(path.dirname(config.dbPath), 'assets', filename);
+  try {
+    if (!fs.existsSync(file)) return [];
+    return fs.readFileSync(file, 'utf8')
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('#'));
+  } catch {
+    return [];
+  }
+}
+
+export function assetMaps(ctx) {
+  authenticate(ctx, false);
+  return { body: { maps: readAssetListFile('maps.txt') } };
+}
+
+export function assetAnimations(ctx) {
+  authenticate(ctx, false);
+  return { body: { animations: readAssetListFile('animations.txt') } };
 }
 
 export function pastRewards(ctx) {

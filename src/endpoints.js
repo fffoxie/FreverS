@@ -24,7 +24,9 @@ import {
   crewsList,
   questsList,
   moderationReasons,
-  inAppPurchaseOffers
+  inAppPurchaseOffers,
+  assetMaps,
+  assetAnimations
 } from './handlers-data.js';
 
 /**
@@ -230,6 +232,20 @@ export const endpoints = [
     paths: ['/purchase/in-app-purchase/offers'],
     handler: inAppPurchaseOffers,
     description: 'In-app purchase offers (returns empty list, all unlocked)'
+  },
+  {
+    id: 'asset-maps',
+    method: 'GET',
+    paths: ['/assets/maps'],
+    handler: assetMaps,
+    description: 'List available studio maps inventory'
+  },
+  {
+    id: 'asset-animations',
+    method: 'GET',
+    paths: ['/assets/animations'],
+    handler: assetAnimations,
+    description: 'List available studio animations inventory'
   }
 ];
 
