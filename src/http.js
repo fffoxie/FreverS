@@ -127,3 +127,26 @@ export function logUnknown({ method, path, bodySize, contentType, preview }) {
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );
 }
+
+export function logCapturedRequest({ method, path: reqPath, headers = {}, body = null }) {
+  const sanitizeHeaders = { ...headers };
+  delete sanitizeHeaders.authorization;
+  delete sanitizeHeaders.cookie;
+  delete sanitizeHeaders['x-access-token'];
+
+  const entry = {
+    timestamp: new Date().toISOString(),
+    method,
+    path: reqPath,
+    headers: sanitizeHeaders,
+    body
+  };
+
+  const captureDir = path.join(config.rootDir, 'data', 'capture');
+  try {
+    fs.mkdirSync(captureDir, { recursive: true });
+    fs.appendFileSync(path.join(captureDir, 'capture.jsonl'), JSON.stringify(entry) + '\n');
+  } catch {
+    // capture must never break request handling
+  }
+}

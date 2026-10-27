@@ -46,6 +46,29 @@ export function readCoverage(file = path.join(root, 'docs', 'protocol.md')) {
   };
 }
 
+export function readCapturedEndpoints(file = path.join(root, 'data', 'capture', 'capture.jsonl')) {
+  try {
+    const content = fs.readFileSync(file, 'utf8');
+    const lines = content.split('\n').filter(Boolean);
+    const counts = {};
+    for (const line of lines) {
+      try {
+        const item = JSON.parse(line);
+        const key = `${item.method || 'GET'} ${item.path || '/'}`;
+        counts[key] = (counts[key] || 0) + 1;
+      } catch {
+        // ignore invalid lines
+      }
+    }
+    return Object.entries(counts).map(([endpoint, hits]) => {
+      const [method, ...rest] = endpoint.split(' ');
+      return { method, path: rest.join(' '), hits };
+    });
+  } catch {
+    return [];
+  }
+}
+
 function tailLines(file, n) {
   try {
     const stat = fs.statSync(file);
@@ -81,7 +104,8 @@ export function buildState(db) {
   const ips = lanAddresses();
   const download = papk.state === 'ok' && papk.output && fs.existsSync(path.join(outDir, papk.output));
   return {
-    server: { running: true, startedAt, uptimeSeconds: Math.round(process.uptime()), host: config.host, port: config.port, node: process.versions.node, nodeEngineReq },
+    server: { running: true, startedAt, uptimeSeconds: Math.round(process.uptime()), host: config.host, port: config.port, node: process.versions.node, nodeEngineReq, captureMode: config.captureMode },
+    unimplementedEndpoints: readCapturedEndpoints(),
     checklist: [
       { id: 'dependencies', label: `Dependencies (Node ${nodeEngineReq}+)`, ok: nodeOk, detail: `node ${process.versions.node}`, command: 'bash scripts/setup-termux.sh' },
       { id: 'database', label: 'Database and accounts', ok: accounts.length >= 2, detail: `${accounts.length} accounts`, command: 'npm run seed' },

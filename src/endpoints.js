@@ -1,4 +1,12 @@
-import { login, updateUsername, requestVerification } from './handlers-auth.js';
+import {
+  login,
+  updateUsername,
+  requestVerification,
+  registerTemporaryAccount,
+  parentalConsent,
+  validatePassword,
+  suggestNicknames
+} from './handlers-auth.js';
 import {
   versions,
   urls,
@@ -173,6 +181,84 @@ export const endpoints = [
     paths: ['/health', '/healthz'],
     handler: () => ({ body: { status: 'ok', service: 'frevers', version: '0.1.0' } }),
     description: 'Local health probe (not called by the game)'
+  },
+  {
+    id: 'register-temporary-account',
+    method: 'POST',
+    paths: [
+      '/Account/RegisterTemporaryAccount',
+      '/account/RegisterTemporaryAccount',
+      '/account/registertemporaryaccount',
+      '/api/account/registertemporaryaccount'
+    ],
+    handler: registerTemporaryAccount,
+    description: 'Register/login guest account (AuthService.RegisterTemporaryAccount)'
+  },
+  {
+    id: 'check-parent-email-bound',
+    method: 'GET',
+    paths: [
+      '/account/CheckIfParentEmailBound',
+      '/Account/CheckIfParentEmailBound',
+      '/account/checkifparentemailbound'
+    ],
+    handler: parentalConsent,
+    description: 'Parental consent check (AuthService.CheckIfParentEmailBound)'
+  },
+  {
+    id: 'configure-parental-consent',
+    method: 'POST',
+    paths: [
+      '/account/ConfigureParentalConsent',
+      '/Account/ConfigureParentalConsent',
+      '/account/configureparentalconsent'
+    ],
+    handler: parentalConsent,
+    description: 'Configure parental consent (AuthService.ConfigureParentalConsent)'
+  },
+  {
+    id: 'assign-parent-email',
+    method: 'POST',
+    paths: [
+      '/account/assignparentemail',
+      '/Account/AssignParentEmail',
+      '/account/AssignParentEmail'
+    ],
+    handler: parentalConsent,
+    description: 'Assign parent email (AuthService.AssignParentEmail)'
+  },
+  {
+    id: 'verify-parent-email',
+    method: 'POST',
+    paths: [
+      '/account/verifyparentemail',
+      '/Account/VerifyParentEmail',
+      '/account/VerifyParentEmail'
+    ],
+    handler: parentalConsent,
+    description: 'Request parent email verification code (AuthService.RequestParentEmailVerificationCode)'
+  },
+  {
+    id: 'validate-password',
+    method: 'POST',
+    paths: [
+      '/account/ValidatePassword',
+      '/Account/ValidatePassword',
+      '/account/validatepassword'
+    ],
+    handler: validatePassword,
+    description: 'Validate password strength (AuthService.ValidatePasswordStrength)'
+  },
+  {
+    id: 'suggest-nicknames',
+    method: 'GET',
+    paths: [
+      '/account/suggestnicknames',
+      '/Account/SuggestNicknames',
+      '/account/SuggestNicknames'
+    ],
+    handler: suggestNicknames,
+    description: 'Get suggested nicknames (AuthService.GetSuggestedNicknames)'
   }
 ];
 
