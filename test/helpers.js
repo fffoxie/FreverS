@@ -4,6 +4,8 @@ import path from 'node:path';
 import { createApp } from '../src/server.js';
 import { setPublicBaseUrl } from '../src/models.js';
 
+process.env.FREVERS_LOG_FILE = path.join(os.tmpdir(), 'frevers-test-server.log');
+
 export const PASSWORD1 = 'test-password-one';
 export const PASSWORD2 = 'test-password-two';
 

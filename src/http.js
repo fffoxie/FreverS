@@ -1,4 +1,22 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { config } from './config.js';
+
+export function logFilePath() {
+  return process.env.FREVERS_LOG_FILE || config.logFile;
+}
+
+function emit(line) {
+  console.log(line);
+  const file = logFilePath();
+  if (!file) return;
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, `${new Date().toISOString()} ${line}\n`);
+  } catch {
+    // logging must never break a request
+  }
+}
 
 export class HttpError extends Error {
   constructor(status, message, code) {
@@ -100,11 +118,11 @@ export function logRequest(entry) {
   if (!config.logRequests) return;
   const { method, path, status, bytes, ms, note } = entry;
   const suffix = note ? ` ${note}` : '';
-  console.log(`[http] ${method} ${path} ${status} ${bytes}B ${ms}ms${suffix}`);
+  emit(`[http] ${method} ${path} ${status} ${bytes}B ${ms}ms${suffix}`);
 }
 
 export function logUnknown({ method, path, bodySize, contentType, preview }) {
-  console.log(
+  emit(
     `[unknown-route] method=${method} path=${path} bodySize=${bodySize} contentType=${contentType || '-'}` +
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );

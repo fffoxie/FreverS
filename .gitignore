@@ -38,3 +38,7 @@ coverage/
 
 # Agent session state
 .cline-home/
+output/
+*.keystore
+*.jks
+.frevers/

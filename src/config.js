@@ -23,6 +23,7 @@ export const config = {
   port,
   publicBaseUrl,
   dbPath: process.env.FREVERS_DB_PATH || path.join(rootDir, 'data', 'frever.db'),
+  logFile: process.env.FREVERS_LOG_FILE || path.join(rootDir, 'data', 'logs', 'server.log'),
   logRequests: process.env.FREVERS_LOG_REQUESTS !== '0',
   logUnknownBodyPreview: intEnv('FREVERS_LOG_BODY_PREVIEW', 512),
   maxBodyBytes: intEnv('FREVERS_MAX_BODY_BYTES', 2 * 1024 * 1024),
