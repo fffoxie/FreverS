@@ -234,6 +234,7 @@ li { margin: 4px 0; }
   </section>
 
   <!-- TAB 5: Logs & Info -->
+  <!-- TAB 4: Logs & Info -->
   <section id="tab-settings" class="tab-content">
     <h2>Actions & Controls</h2>
     <div class="card">
@@ -299,6 +300,14 @@ function render(s) {
     ? '<div class="row"><span>' + c.implemented + ' implemented of ' + c.confirmed + ' confirmed</span><span class="status ok">' + c.percent + '%</span></div>' +
       '<div class="muted">' + c.unknown + ' UNKNOWN routes (returns 404 and logged)</div>'
     : 'docs/protocol.md not readable';
+
+  const unimp = s.unimplementedEndpoints || [];
+  if (unimp.length === 0) {
+    $('unimplemented').innerHTML = '<div class="muted">No unimplemented endpoints captured yet. ' +
+      (s.server.captureMode ? 'Capture mode is ENABLED.' : 'Capture mode is disabled (set FREVERS_CAPTURE=1 to enable).') + '</div>';
+  } else {
+    $('unimplemented').innerHTML = '<ul>' + unimp.map(item => '<li><code>' + esc(item.method) + ' ' + esc(item.path) + '</code> — ' + item.hits + ' hits</li>').join('') + '</ul>';
+  }
 
   $('logs').textContent = s.logs.length ? s.logs.join('\n') : '(no log lines yet)';
 

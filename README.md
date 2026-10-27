@@ -72,6 +72,7 @@ http://127.0.0.1:8080/dashboard
 
 To patch the client using the dashboard's **Create PAPK** tool, copy your downloaded original Frever 4.0.5 APK into the repo's `analysis/` folder on your phone:
 
+### Step 4: Start the server
 ```sh
 termux-setup-storage
 ls ~/storage/downloads | grep -i frever

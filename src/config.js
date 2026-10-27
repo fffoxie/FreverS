@@ -47,7 +47,8 @@ export const config = {
     password2: process.env.FREVERS_USER2_PASSWORD || ''
   },
   // Optional local timezone hint; the client sends timestamps itself.
-  logLevel: process.env.FREVERS_LOG_LEVEL || 'info'
+  logLevel: process.env.FREVERS_LOG_LEVEL || 'info',
+  captureMode: process.env.FREVERS_CAPTURE === '1' || process.env.FREVERS_CAPTURE === 'true'
 };
 
 export default config;
