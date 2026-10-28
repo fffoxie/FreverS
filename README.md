@@ -55,9 +55,10 @@ and contains no `*.frever-api.com` host strings.
 The patched APK has a different signing key, so **uninstall the original Frever
 first**; Android will refuse an in-place update.
 
-The same dashboard is served by GitHub Pages from the `docs/` folder. In the
-repository: **Settings → Pages → Deploy from a branch → `main` / `/docs`**, then
-open `https://fffoxie.github.io/FreverS/`. A browser opened on the phone can reach
+The dashboard is published on the `gh-pages` branch (and mirrored in `docs/`).
+Enable it once in **Settings → Pages → Deploy from a branch → `gh-pages` / `/`**;
+the link is `https://fffoxie.github.io/FreverS/`. (This sandbox cannot flip the
+Pages setting itself.) A browser opened on the phone can reach
 `http://127.0.0.1:8080`, but an HTTPS page calling a LAN IP over HTTP is blocked
 as mixed content. For managing another device, open the dashboard served by the
 phone (`http://<phone-ip>:8080/admin`) instead.
