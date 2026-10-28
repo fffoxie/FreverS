@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreverS Control Panel</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --fg: #111;
+  --bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --muted: #555;
+  --line: #ddd;
+  --ok: #0a7d33;
+  --bad: #b00020;
+  --warn: #8a5a00;
+  --primary: #2a6df4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #eee;
+    --bg: #121212;
+    --card-bg: #1e1e1e;
+    --muted: #aaa;
+    --line: #333;
+    --ok: #5fd08a;
+    --bad: #ff8080;
+    --warn: #ffcc66;
+    --primary: #4a8df6;
+  }
+}
+* { box-sizing: border-box; }
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+body {
+  margin: 0;
+  padding: 10px;
+  font: 15px/1.4 system-ui, -apple-system, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+h1 { font-size: 1.3rem; margin: 0; }
+.muted { color: var(--muted); font-size: .85rem; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  min-height: 40px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom: 3px solid var(--primary);
+  background: rgba(42, 109, 244, 0.08);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards & Components */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  max-width: 100%;
+}
+.row {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.status { font-weight: 600; white-space: nowrap; }
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--bad); }
+.status.warn { color: var(--warn); }
+code {
+  font: 12px/1.3 ui-monospace, monospace;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  background: rgba(127,127,127,.15);
+  padding: 2px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  max-width: 100%;
+}
+pre {
+  font: 11px/1.35 ui-monospace, monospace;
+  overflow-x: auto;
+  max-height: 240px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  background: rgba(0,0,0,0.03);
+}
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 14px;
+  min-height: 44px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(127,127,127,.12);
+  color: var(--fg);
+  cursor: pointer;
+  touch-action: manipulation;
+  margin-top: 6px;
+}
+button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid #ffb300; outline-offset: 2px; }
+input[type=url], input[type=text] {
+  font: inherit;
+  padding: 10px;
+  min-height: 44px;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg);
+  box-sizing: border-box;
+}
+a { color: var(--primary); font-weight: 600; text-decoration: underline; padding: 6px 0; display: inline-block; min-height: 44px; word-break: break-all; }
+ul { margin: 0; padding-left: 16px; }
+li { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>FreverS</h1>
+    <div class="muted" id="sub">Local-only server for Frever 4.0.5</div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab-btn active" onclick="switchTab('status')" role="tab">Status</button>
+  <button class="tab-btn" onclick="switchTab('accounts')" role="tab">Accounts</button>
+  <button class="tab-btn" onclick="switchTab('papk')" role="tab">PAPK Tool</button>
+  <button class="tab-btn" onclick="switchTab('assets')" role="tab">Assets</button>
+  <button class="tab-btn" onclick="switchTab('settings')" role="tab">Logs & Info</button>
+</nav>
+
+<main>
+  <!-- TAB 1: Status & Setup -->
+  <section id="tab-status" class="tab-content active">
+    <h2>Server Status</h2>
+    <div class="card" id="server">loading…</div>
+
+    <h2>Setup Checklist</h2>
+    <div id="checklist" aria-live="polite"></div>
+  </section>
+
+  <!-- TAB 2: Accounts & DB -->
+  <section id="tab-accounts" class="tab-content">
+    <h2>Database & Seed Accounts</h2>
+    <div class="card">
+      <div id="db-summary" class="muted" style="margin-bottom:6px">loading…</div>
+      <ul id="accounts"></ul>
+      <div class="muted" style="margin-top:8px">Passwords are saved in <code>data/credentials.txt</code> on the phone.</div>
+    </div>
+
+    <h2>API Coverage</h2>
+    <div class="card" id="coverage">loading…</div>
+  </section>
+
+  <!-- TAB 3: PAPK Tool -->
+  <section id="tab-papk" class="tab-content">
+    <h2>Create PAPK</h2>
+    <div class="card">
+      <label for="papk-url" class="muted" style="display:block; margin-bottom:4px">Server address baked into APK (max 36 chars):</label>
+      <input id="papk-url" type="url" inputmode="url" autocomplete="off" placeholder="http://127.0.0.1:8080/">
+
+      <label for="papk-apkpath" class="muted" style="display:block; margin-top:10px; margin-bottom:4px">Custom Original APK Path (optional override):</label>
+      <input id="papk-apkpath" type="text" autocomplete="off" placeholder="analysis/Frever_4.0.5_APKPure.apk">
+
+      <div class="muted" style="margin-top:8px; font-size:0.8rem; color:var(--warn)">
+        Note: Frever 4.0.5 is 32-bit ARM (armeabi-v7a). On 64-bit-only Android devices, ensure 32-bit compatibility or install via Termux session.
+      </div>
+
+      <button class="primary" id="papk-btn" type="button" style="margin-top:12px">Create PAPK</button>
+      <button id="papk-retry-btn" type="button" style="margin-top:8px" hidden>Check again / Retry PAPK</button>
+
+      <div id="papk-state" class="muted" style="margin-top:10px" aria-live="polite"></div>
+      <div id="papk-fix-box" class="card" style="margin-top:10px; border-color: var(--warn); background: rgba(255, 179, 0, 0.08);" hidden></div>
+      <pre id="papk-steps" hidden></pre>
+    </div>
+  </section>
+
+  <!-- TAB 4: Assets -->
+  <section id="tab-assets" class="tab-content">
+    <h2>Local Asset Store & Inventory</h2>
+    <div class="card">
+      <div class="muted">Asset files location: <code>data/assets/</code></div>
+      <div style="margin-top:8px">To import bundles or caches into FreverS:</div>
+      <code>node scripts/import-assets.mjs &lt;path-to-bundle-or-dir&gt;</code>
+      <div style="margin-top:10px">
+        <label for="cache-folder-input" class="muted" style="display:block; margin-bottom:4px">Import Device Cache Directory:</label>
+        <input id="cache-folder-input" type="text" placeholder="/sdcard/Android/data/com.FriendFactory.Frever/files/">
+        <button type="button" onclick="triggerCacheImport()" style="margin-top:6px">Import Device Cache</button>
+        <div id="cache-import-msg" class="muted" style="margin-top:6px" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <h2>Studio Maps Inventory</h2>
+    <div class="card">
+      <ul id="maps-list">
+        <li>map_maya_studio</li>
+        <li>map_main_stage</li>
+        <li>map_beach_set</li>
+        <li>map_urban_street</li>
+        <li>map_sunset_loft</li>
+      </ul>
+      <div class="muted">Text file: <code>data/assets/maps.txt</code></div>
+    </div>
+
+    <h2>Studio Animations Inventory</h2>
+    <div class="card">
+      <ul id="anim-list">
+        <li>anim_idle_default</li>
+        <li>anim_dance_hiphop</li>
+        <li>anim_dance_kpop</li>
+        <li>anim_walk_catwalk</li>
+        <li>anim_wave_hello</li>
+      </ul>
+      <div class="muted">Text file: <code>data/assets/animations.txt</code></div>
+    </div>
+  </section>
+
+  <!-- TAB 5: Logs & Info -->
+  <section id="tab-settings" class="tab-content">
+    <h2>Actions & Controls</h2>
+    <div class="card">
+      <button type="button" onclick="refresh()">Refresh Status Now</button>
+      <button type="button" onclick="copyLanUrl()">Copy Server LAN Address</button>
+      <button type="button" onclick="triggerUpdate()" style="margin-top:10px; background:var(--primary); color:#fff; border-color:var(--primary)">Check & Pull Updates from GitHub</button>
+      <div id="update-msg" class="muted" style="margin-top:6px" aria-live="polite"></div>
+    </div>
+
+    <h2>Recent Server Logs</h2>
+    <pre id="logs" aria-live="off">loading…</pre>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+let inited = false;
+let currentLanIp = '';
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+  if (targetBtn) targetBtn.classList.add('active');
+
+  const targetContent = $('tab-' + tabId);
+  if (targetContent) targetContent.classList.add('active');
+}
+
+function copyLanUrl() {
+  if (currentLanIp) {
+    navigator.clipboard.writeText(currentLanIp).then(() => {
+      alert('Copied to clipboard: ' + currentLanIp);
+    }).catch(() => {
+      alert('LAN URL: ' + currentLanIp);
+    });
+  } else {
+    alert('LAN IP not detected.');
+  }
+}
+
+function render(s) {
+  currentLanIp = s.lan.length ? ('http://' + s.lan[0] + ':' + s.server.port + '/') : ('http://127.0.0.1:' + s.server.port + '/');
+
+  $('sub').textContent = 'Node ' + s.server.node + ' · Port ' + s.server.port + ' · Up ' + s.server.uptimeSeconds + 's' +
+    (s.lan.length ? ' · LAN: ' + s.lan.join(', ') : '');
+
+  $('checklist').innerHTML = s.checklist.map((c) => {
+    const state = c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'warn';
+    const text = c.ok === true ? 'OK' : c.ok === false ? 'FAILED' : 'NOT RUN';
+    return '<div class="card"><div class="row"><span>' + esc(c.label) + '</span><span class="status ' + state + '">' + text + '</span></div>' +
+      '<div class="muted">' + esc(c.detail) + '</div><div style="margin-top:6px"><code>' + esc(c.command) + '</code></div></div>';
+  }).join('');
+
+  $('server').innerHTML = '<div class="row"><span>Listening on ' + esc(s.server.host) + ':' + s.server.port + '</span><span class="status ok">RUNNING</span></div>' +
+    '<div class="muted">Started at ' + esc(s.server.startedAt) + '</div>';
+
+  $('db-summary').textContent = 'Database active. Accounts count: ' + s.accounts.length;
+  $('accounts').innerHTML = s.accounts.map((a) => '<li>' + esc(a.username) + ' (ID ' + a.id + ')</li>').join('') || '<li>(no accounts seeded)</li>';
+
+  const c = s.coverage;
+  $('coverage').innerHTML = c.available
+    ? '<div class="row"><span>' + c.implemented + ' implemented of ' + c.confirmed + ' confirmed</span><span class="status ok">' + c.percent + '%</span></div>' +
+      '<div class="muted">' + c.unknown + ' UNKNOWN routes (returns 404 and logged)</div>'
+    : 'docs/protocol.md not readable';
+
+  $('logs').textContent = s.logs.length ? s.logs.join('\n') : '(no log lines yet)';
+
+  if (!inited) {
+    $('papk-url').value = s.papk.defaultUrl;
+    inited = true;
+  }
+
+  if (s.papk.state === 'never-run') {
+    $('papk-state').textContent = 'PAPK not generated yet';
+    $('papk-steps').hidden = true;
+    $('papk-fix-box').hidden = true;
+    $('papk-retry-btn').hidden = true;
+  } else if (s.papk.state === 'ok') {
+    $('papk-state').innerHTML = '<span class="status ok">Built successfully</span> · md5 <code>' + esc(s.papk.md5) + '</code> · ' + s.papk.size + ' bytes' +
+      (s.papk.download ? '<div style="margin-top:8px"><a href="' + esc(s.papk.download) + '">Download ' + esc(s.papk.output) + '</a></div>' : '');
+    $('papk-steps').hidden = false;
+    $('papk-steps').textContent = (s.papk.steps || []).map((x) => x.state.padEnd(7) + ' ' + x.name + ' ' + (x.detail || '')).join('\n');
+    $('papk-fix-box').hidden = true;
+    $('papk-retry-btn').hidden = true;
+  } else {
+    $('papk-state').innerHTML = '<span class="status ' + (s.papk.state === 'running' ? 'warn' : 'bad') + '">' + esc(s.papk.state).toUpperCase() + '</span>' +
+      (s.papk.failedStep ? ' · failed at step <code>' + esc(s.papk.failedStep) + '</code>' : '');
+    $('papk-steps').hidden = false;
+    $('papk-steps').textContent = (s.papk.steps || []).map((x) => x.state.padEnd(7) + ' ' + x.name + ' ' + (x.detail || '')).join('\n');
+
+    if (s.papk.failedStep === 'locate-original-apk') {
+      $('papk-fix-box').hidden = false;
+      $('papk-retry-btn').hidden = false;
+      let html = '<div style="font-weight:600; margin-bottom:6px; color:var(--bad)">Missing Original APK</div>';
+      html += '<div>Missing target path: <code>' + esc(s.papk.missingPath || 'analysis/Frever_4.0.5_APKPure.apk') + '</code></div>';
+      if (s.papk.candidateFix) {
+        html += '<div style="margin-top:8px">Candidate APK found! Run this copy command on the phone:</div>' +
+          '<div style="margin-top:4px"><code>' + esc(s.papk.candidateFix) + '</code></div>';
+      } else {
+        html += '<div style="margin-top:8px">Copy your Frever APK into ~/FreverS/analysis/ and name it Frever_4.0.5_APKPure.apk, then press Create PAPK again. If Android hides the Downloads folder, run termux-setup-storage first.</div>';
+      }
+      $('papk-fix-box').innerHTML = html;
+    } else {
+      $('papk-fix-box').hidden = true;
+      $('papk-retry-btn').hidden = true;
+    }
+  }
+}
+
+async function triggerPapk() {
+  $('papk-btn').disabled = true;
+  $('papk-retry-btn').disabled = true;
+  try {
+    const payload = { url: $('papk-url').value };
+    if ($('papk-apkpath').value.trim()) {
+      payload.apkPath = $('papk-apkpath').value.trim();
+    }
+    const r = await fetch('/dashboard/api/papk', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      $('papk-state').textContent = 'Could not start PAPK build: ' + (err.error || ('HTTP ' + r.status));
+    }
+  } catch (e) {
+    $('papk-state').textContent = 'Could not start PAPK build: ' + e.message;
+  }
+  $('papk-btn').disabled = false;
+  $('papk-retry-btn').disabled = false;
+  refresh();
+}
+
+async function triggerCacheImport() {
+  const folder = $('cache-folder-input').value.trim();
+  if (!folder) {
+    $('cache-import-msg').textContent = 'Please enter a valid cache folder path.';
+    return;
+  }
+  $('cache-import-msg').textContent = 'Starting cache import...';
+  try {
+    const r = await fetch('/dashboard/api/import-cache', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ folder })
+    });
+    if (r.ok) {
+      $('cache-import-msg').textContent = 'Cache import started in background!';
+    } else {
+      $('cache-import-msg').textContent = 'Cache import failed: HTTP ' + r.status;
+    }
+  } catch (e) {
+    $('cache-import-msg').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function triggerUpdate() {
+  $('update-msg').textContent = 'Pulling updates from GitHub...';
+  try {
+    const r = await fetch('/dashboard/api/update', { method: 'POST' });
+    if (r.ok) {
+      $('update-msg').textContent = 'Git pull initiated! Restart server in Termux if changes were fetched.';
+    } else {
+      $('update-msg').textContent = 'Update failed: HTTP ' + r.status;
+    }
+  } catch (e) {
+    $('update-msg').textContent = 'Update error: ' + e.message;
+  }
+}
+
+async function refresh() {
+  try {
+    const r = await fetch('/dashboard/api/state', { cache: 'no-store' });
+    if (r.ok) {
+      render(await r.json());
+    } else {
+      $('server').textContent = 'Server returned HTTP ' + r.status;
+    }
+  } catch (e) {
+    $('server').textContent = 'Server unreachable: ' + e.message;
+  }
+}
+
+$('papk-btn').addEventListener('click', triggerPapk);
+$('papk-retry-btn').addEventListener('click', triggerPapk);
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

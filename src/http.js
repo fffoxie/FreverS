@@ -121,9 +121,29 @@ export function logRequest(entry) {
   emit(`[http] ${method} ${path} ${status} ${bytes}B ${ms}ms${suffix}`);
 }
 
-export function logUnknown({ method, path, bodySize, contentType, preview }) {
+export function logUnknown({ method, path, bodySize, contentType, preview, raw, headers }) {
   emit(
     `[unknown-route] method=${method} path=${path} bodySize=${bodySize} contentType=${contentType || '-'}` +
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );
+  if (process.env.FREVERS_CAPTURE === '1') {
+    try {
+      const captureDir = path.join(path.dirname(logFilePath()), 'capture');
+      fs.mkdirSync(captureDir, { recursive: true });
+      const filename = `capture_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.json`;
+      const sanitizedHeaders = { ...headers };
+      delete sanitizedHeaders['authorization'];
+      delete sanitizedHeaders['cookie'];
+      const record = {
+        timestamp: new Date().toISOString(),
+        method,
+        path,
+        headers: sanitizedHeaders,
+        bodyPreview: preview || (raw ? raw.toString('utf8').slice(0, 1000) : '')
+      };
+      fs.writeFileSync(path.join(captureDir, filename), JSON.stringify(record, null, 2));
+    } catch {
+      // capture write fail should not crash request
+    }
+  }
 }
