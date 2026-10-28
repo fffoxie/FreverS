@@ -11,6 +11,10 @@ dump.cs
 script.json
 stringliteral.json
 
+# Vendored raw cloned packs & tools
+vendor/
+analysis/tools/
+
 # Extracted game assets
 assets/
 jadx-out/
