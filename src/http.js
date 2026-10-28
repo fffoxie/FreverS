@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import nodePath from 'node:path';
 import { config } from './config.js';
 
 export function logFilePath() {
@@ -11,7 +11,7 @@ function emit(line) {
   const file = logFilePath();
   if (!file) return;
   try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.mkdirSync(nodePath.dirname(file), { recursive: true });
     fs.appendFileSync(file, `${new Date().toISOString()} ${line}\n`);
   } catch {
     // logging must never break a request
@@ -116,19 +116,43 @@ export function sendEmpty(res, status = 200) {
 
 export function logRequest(entry) {
   if (!config.logRequests) return;
-  const { method, path, status, bytes, ms, note } = entry;
+  const { method, path: reqPath, status, bytes, ms, note } = entry;
   const suffix = note ? ` ${note}` : '';
-  emit(`[http] ${method} ${path} ${status} ${bytes}B ${ms}ms${suffix}`);
+  emit(`[http] ${method} ${reqPath} ${status} ${bytes}B ${ms}ms${suffix}`);
 }
 
-export function logUnknown({ method, path, bodySize, contentType, preview, raw, headers }) {
+export function logCapturedRequest({ method, path: reqPath, headers, body }) {
+  try {
+    const captureDir = nodePath.join(config.rootDir, 'data', 'capture');
+    fs.mkdirSync(captureDir, { recursive: true });
+    const captureFile = nodePath.join(captureDir, 'capture.jsonl');
+
+    const sanitizedHeaders = { ...headers };
+    delete sanitizedHeaders['authorization'];
+    delete sanitizedHeaders['cookie'];
+
+    const record = {
+      timestamp: new Date().toISOString(),
+      method,
+      path: reqPath,
+      headers: sanitizedHeaders,
+      body: body || {}
+    };
+
+    fs.appendFileSync(captureFile, JSON.stringify(record) + '\n', 'utf8');
+  } catch {
+    // capture write fail should not crash request
+  }
+}
+
+export function logUnknown({ method, path: reqPath, bodySize, contentType, preview, raw, headers }) {
   emit(
-    `[unknown-route] method=${method} path=${path} bodySize=${bodySize} contentType=${contentType || '-'}` +
+    `[unknown-route] method=${method} path=${reqPath} bodySize=${bodySize} contentType=${contentType || '-'}` +
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );
-  if (process.env.FREVERS_CAPTURE === '1') {
+  if (process.env.FREVERS_CAPTURE === '1' || config.captureMode) {
     try {
-      const captureDir = path.join(path.dirname(logFilePath()), 'capture');
+      const captureDir = nodePath.join(config.rootDir, 'data', 'capture');
       fs.mkdirSync(captureDir, { recursive: true });
       const filename = `capture_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.json`;
       const sanitizedHeaders = { ...headers };
@@ -137,11 +161,11 @@ export function logUnknown({ method, path, bodySize, contentType, preview, raw, 
       const record = {
         timestamp: new Date().toISOString(),
         method,
-        path,
+        path: reqPath,
         headers: sanitizedHeaders,
         bodyPreview: preview || (raw ? raw.toString('utf8').slice(0, 1000) : '')
       };
-      fs.writeFileSync(path.join(captureDir, filename), JSON.stringify(record, null, 2));
+      fs.writeFileSync(nodePath.join(captureDir, filename), JSON.stringify(record, null, 2));
     } catch {
       // capture write fail should not crash request
     }
