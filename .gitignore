@@ -17,13 +17,22 @@ jadx-out/
 jadx-res/
 cpp2il_out/
 
-# Local database and generated credentials
+# Local database, logs, and output
 data/
+output/
+logs/
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
 credentials.txt
+generated-credentials.txt
+
+# Keystores and credentials
+keystores/
+*.keystore
+*.jks
+.frevers/
 
 # Node
 node_modules/
@@ -38,7 +47,3 @@ coverage/
 
 # Agent session state
 .cline-home/
-output/
-*.keystore
-*.jks
-.frevers/
