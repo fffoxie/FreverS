@@ -41,9 +41,13 @@ After starting, open the web dashboard in your phone browser:
 To generate the patched app (PAPK) that points to your local private server:
 
 1. Obtain a clean copy of **Frever 4.0.5 APK or XAPK**.
-2. Place the file on your phone in `~/FreverS/analysis/Frever_4.0.5_APKPure.apk` or in your device's `Download/` folder:
+2. Place the file on your phone in `~/FreverS/analysis/Frever_4.0.5_APKPure.apk` or in your device's `Download/` folder (`/storage/emulated/0/Download/` or `/sdcard/Download/`):
    ```bash
+   # Standard Termux storage symlink:
    cp ~/storage/downloads/Frever_4.0.5_APKPure.apk ~/FreverS/analysis/Frever_4.0.5_APKPure.apk
+
+   # Or direct Android internal storage path (/storage/emulated/0/Download/):
+   cp /storage/emulated/0/Download/Frever_4.0.5_APKPure.apk ~/FreverS/analysis/Frever_4.0.5_APKPure.apk
    ```
 3. Open the web control panel at `http://127.0.0.1:8080/dashboard`, navigate to **PAPK Tool**, and tap **Create PAPK**.
 
@@ -66,6 +70,7 @@ To generate the patched app (PAPK) that points to your local private server:
 | --- | --- |
 | Termux Mirror Errors | Run `termux-change-repo` and select a working main repository mirror. |
 | Server Dies When Screen Locks | Run `termux-wake-lock` and disable battery optimization for Termux in Android Settings. |
+| App Not Installed / Not Compatible | Frever 4.0.5 is 32-bit ARM (`armeabi-v7a`). Some 64-bit-only phones (e.g. newer Galaxy S24/Pixel 8) block 32-bit apps. On 32-bit-capable devices (like Galaxy S20), ensure original key is uninstalled first and unknown sources permission is granted. |
 | Missing Original APK Error | Copy your Frever APK into `analysis/Frever_4.0.5_APKPure.apk` or specify path in the PAPK control panel. |
 | Port 8080 Already Busy | Run `export FREVERS_PORT=8081 && bash scripts/start.sh` |
 | System Health Diagnostics | Run `bash scripts/doctor.sh` to test Git, Node version, SQLite DB, port, and unit tests. |

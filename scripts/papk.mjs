@@ -80,6 +80,8 @@ export function findApkCandidates() {
     analysisDir,
     path.join(home, 'storage', 'downloads'),
     path.join(home, 'storage', 'shared', 'Download'),
+    '/storage/emulated/0/Download',
+    '/sdcard/Download',
     path.join(home, 'Downloads')
   ];
 
@@ -116,7 +118,8 @@ function findTools() {
     fs.existsSync(signerJar) && java ? { kind: 'uber', cmd: java, args: ['-jar', signerJar] } : null;
   const localKeytool = path.join(local, 'jre/bin/keytool');
   const keytool = which('keytool') || (fs.existsSync(localKeytool) ? localKeytool : null);
-  return { java, apktool, apksigner, keytool };
+  const zipalign = which('zipalign');
+  return { java, apktool, apksigner, keytool, zipalign };
 }
 
 export function readStatus(file = statusFile) {
@@ -268,15 +271,26 @@ function runSteps({ status, step, url, out, apkOverride }) {
     return `generated ${keystore} (outside the repository)`;
   });
 
+  const aligned = path.join(workDir, 'aligned.apk');
+  step('zipalign', () => {
+    if (tools.zipalign) {
+      run(tools.zipalign, ['-p', '-f', '4', unsigned, aligned]);
+      return 'aligned 4-byte boundaries';
+    } else {
+      fs.copyFileSync(unsigned, aligned);
+      return 'zipalign binary not present; skipped (alignment done by apktool)';
+    }
+  });
+
   step('sign', () => {
     const pass = fs.readFileSync(passFile, 'utf8').trim();
     fs.mkdirSync(out, { recursive: true });
     const signedTmp = path.join(workDir, 'signed.apk');
     if (tools.apksigner.kind === 'apksigner') {
-      run(tools.apksigner.cmd, ['sign', '--ks', keystore, '--ks-pass', `file:${passFile}`, '--ks-key-alias', 'frevers', '--out', signedTmp, unsigned]);
+      run(tools.apksigner.cmd, ['sign', '--ks', keystore, '--ks-pass', `file:${passFile}`, '--ks-key-alias', 'frevers', '--out', signedTmp, aligned]);
     } else {
       const dir = path.join(workDir, 'signed');
-      run(tools.apksigner.cmd, [...tools.apksigner.args, '-a', unsigned, '--ks', keystore, '--ksAlias', 'frevers',
+      run(tools.apksigner.cmd, [...tools.apksigner.args, '-a', aligned, '--ks', keystore, '--ksAlias', 'frevers',
         '--ksPass', pass, '--ksKeyPass', pass, '--allowResign', '-o', dir]);
       const f = fs.readdirSync(dir).find((n) => n.endsWith('.apk'));
       if (!f) throw new Error('signer produced no APK');

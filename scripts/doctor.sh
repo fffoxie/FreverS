@@ -141,7 +141,8 @@ else
     echo "  FIX: Run 'cp \"$CANDIDATE\" \"$TARGET_APK\"'"
   else
     echo "  FIX: Copy your Frever APK to $TARGET_APK"
-    echo "       Example: cp ~/storage/downloads/<your-file>.apk $TARGET_APK"
+    echo "       Example: cp /storage/emulated/0/Download/<your-file>.apk $TARGET_APK"
+    echo "       Or:      cp ~/storage/downloads/<your-file>.apk $TARGET_APK"
   fi
 fi
 

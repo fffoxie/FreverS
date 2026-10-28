@@ -214,6 +214,10 @@ li { margin: 4px 0; }
       <label for="papk-apkpath" class="muted" style="display:block; margin-top:10px; margin-bottom:4px">Custom Original APK Path (optional override):</label>
       <input id="papk-apkpath" type="text" autocomplete="off" placeholder="analysis/Frever_4.0.5_APKPure.apk">
 
+      <div class="muted" style="margin-top:8px; font-size:0.8rem; color:var(--warn)">
+        Note: Frever 4.0.5 is 32-bit ARM (armeabi-v7a). On 64-bit-only Android devices, ensure 32-bit compatibility or install via Termux session.
+      </div>
+
       <button class="primary" id="papk-btn" type="button" style="margin-top:12px">Create PAPK</button>
       <button id="papk-retry-btn" type="button" style="margin-top:8px" hidden>Check again / Retry PAPK</button>
 
