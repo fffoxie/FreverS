@@ -4,6 +4,7 @@
 
 > **Credits & License:**
 > FreverS (Frever RDT), by fffoxie, with Jules.
+> Recreates the API contracts of the open-source **FriendFactory (Frever)** backend in a lightweight Node.js engine for Termux on Android.
 > This is a fan-made, non-commercial project and is NOT affiliated with or endorsed by Frever or Friend Factory. See `NOTICE` for details.
 
 ---
@@ -76,6 +77,7 @@ bash scripts/start.sh
 ```
 
 ### FriendFactory Open Source Repositories & Guides:
+- **Backend Architecture & Re-creation:** See [`docs/BACKEND_RECREATION_AND_TERMUX.md`](docs/BACKEND_RECREATION_AND_TERMUX.md) detailing how FreverS recreates the original C# .NET microservices backend (`AuthServer`, `Client`, `AssetServer`, `Video`) using a zero-dependency Node.js + SQLite engine in Termux.
 - **Ecosystem Breakdown:** See [`docs/FRIENDFACTORY_ECOSYSTEM.md`](docs/FRIENDFACTORY_ECOSYSTEM.md) for a full listing of FriendFactory's 40+ official open-source repositories (Wardrobe packs, Animation packs, Set locations, and URP Shader libraries).
 - **VRChat Avatars & Blender Pipeline:** See [`docs/ASSET_CREATION.md`](docs/ASSET_CREATION.md) for Blender FBX retargeting and ARKit 52 facial blendshape slider setup.
 - **Community Cache Exporter:** See [`docs/EXPORT_YOUR_CACHE.md`](docs/EXPORT_YOUR_CACHE.md) for export steps using USB, ADB, or Termux.
