@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TokenResponse",
+  "type": "object",
+  "properties": {
+    "access_token": {
+      "type": "string"
+    },
+    "refresh_token": {
+      "type": "string"
+    },
+    "token_type": {
+      "type": "string",
+      "default": "Bearer"
+    },
+    "expires_in": {
+      "type": "integer"
+    },
+    "server_url": {
+      "type": "string"
+    },
+    "transcoding_server": {
+      "type": "string"
+    },
+    "video_server": {
+      "type": "string"
+    },
+    "social_server": {
+      "type": "string"
+    },
+    "notification_server": {
+      "type": "string"
+    },
+    "client_server": {
+      "type": "string"
+    },
+    "chat_server": {
+      "type": "string"
+    },
+    "assetmanager_server": {
+      "type": "string"
+    }
+  }
+}

@@ -7,7 +7,7 @@ import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
 import { setPublicBaseUrl } from './models.js';
 import { handleDashboard } from './dashboard.js';
-import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown } from './http.js';
+import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown, logCapturedRequest } from './http.js';
 
 function errorPayload(error) {
   if (error instanceof HttpError) {
@@ -115,7 +115,6 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
         } else {
         const match = matchEndpoint(method, path);
       if (!match) {
-        status = 404;
         const preview =
           globalConfig.logUnknownBodyPreview > 0 && parsed.text
             ? parsed.text.slice(0, globalConfig.logUnknownBodyPreview)
@@ -136,9 +135,36 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
           'content-type': 'application/json; charset=utf-8',
           'content-length': body.length
         });
-        res.end(body);
-        status = 404;
-        bytes = body.length;
+
+        if (globalConfig.captureMode) {
+          logCapturedRequest({
+            method,
+            path,
+            headers: req.headers,
+            body: parsed.body
+          });
+          const body = Buffer.from(JSON.stringify({}));
+          status = 200;
+          res.writeHead(200, {
+            'content-type': 'application/json; charset=utf-8',
+            'content-length': body.length,
+            'cache-control': 'no-store'
+          });
+          res.end(body);
+          bytes = body.length;
+          note = 'captured';
+        } else {
+          status = 404;
+          const body = Buffer.from(
+            JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${path}` })
+          );
+          res.writeHead(404, {
+            'content-type': 'application/json; charset=utf-8',
+            'content-length': body.length
+          });
+          res.end(body);
+          bytes = body.length;
+        }
       } else {
         const ctx = {
           req,
