@@ -46,29 +46,6 @@ export function readCoverage(file = path.join(root, 'docs', 'protocol.md')) {
   };
 }
 
-export function readCapturedEndpoints(file = path.join(root, 'data', 'capture', 'capture.jsonl')) {
-  try {
-    const content = fs.readFileSync(file, 'utf8');
-    const lines = content.split('\n').filter(Boolean);
-    const counts = {};
-    for (const line of lines) {
-      try {
-        const item = JSON.parse(line);
-        const key = `${item.method || 'GET'} ${item.path || '/'}`;
-        counts[key] = (counts[key] || 0) + 1;
-      } catch {
-        // ignore invalid lines
-      }
-    }
-    return Object.entries(counts).map(([endpoint, hits]) => {
-      const [method, ...rest] = endpoint.split(' ');
-      return { method, path: rest.join(' '), hits };
-    });
-  } catch {
-    return [];
-  }
-}
-
 function tailLines(file, n) {
   try {
     const stat = fs.statSync(file);
@@ -168,6 +145,19 @@ export async function handleDashboard({ req, res, method, path: p, db, body = {}
     }
     const updateRes = spawn('git', ['pull', 'origin', 'main'], { cwd: root, encoding: 'utf8' });
     return { status: 200, bytes: send(res, 200, 'application/json', JSON.stringify({ status: 'git pull initiated' })) };
+  }
+  if (p === '/dashboard/api/import-cache' && method === 'POST') {
+    const remote = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+    if (!/^(127\.|::1$|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(remote)) {
+      return { status: 403, bytes: send(res, 403, 'application/json', JSON.stringify({ error: 'local network only' })) };
+    }
+    const targetFolder = body && typeof body === 'object' ? String(body.folder || '') : '';
+    if (!targetFolder || !fs.existsSync(targetFolder)) {
+      return { status: 400, bytes: send(res, 400, 'application/json', JSON.stringify({ error: 'invalid or missing folder path' })) };
+    }
+    const args = [path.join(root, 'scripts', 'import-cache.mjs'), targetFolder];
+    spawn(process.execPath, args, { cwd: root, detached: true, stdio: 'ignore' }).unref();
+    return { status: 202, bytes: send(res, 202, 'application/json', JSON.stringify({ status: 'cache import started' })) };
   }
   const download = /^\/dashboard\/download\/([A-Za-z0-9_.\-]+\.apk)$/.exec(p);
   if (download && method === 'GET') {
