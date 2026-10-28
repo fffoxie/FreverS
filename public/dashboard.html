@@ -234,6 +234,12 @@ li { margin: 4px 0; }
       <div class="muted">Asset files location: <code>data/assets/</code></div>
       <div style="margin-top:8px">To import bundles or caches into FreverS:</div>
       <code>node scripts/import-assets.mjs &lt;path-to-bundle-or-dir&gt;</code>
+      <div style="margin-top:10px">
+        <label for="cache-folder-input" class="muted" style="display:block; margin-bottom:4px">Import Device Cache Directory:</label>
+        <input id="cache-folder-input" type="text" placeholder="/sdcard/Android/data/com.FriendFactory.Frever/files/">
+        <button type="button" onclick="triggerCacheImport()" style="margin-top:6px">Import Device Cache</button>
+        <div id="cache-import-msg" class="muted" style="margin-top:6px" aria-live="polite"></div>
+      </div>
     </div>
 
     <h2>Studio Maps Inventory</h2>
@@ -397,6 +403,29 @@ async function triggerPapk() {
   $('papk-btn').disabled = false;
   $('papk-retry-btn').disabled = false;
   refresh();
+}
+
+async function triggerCacheImport() {
+  const folder = $('cache-folder-input').value.trim();
+  if (!folder) {
+    $('cache-import-msg').textContent = 'Please enter a valid cache folder path.';
+    return;
+  }
+  $('cache-import-msg').textContent = 'Starting cache import...';
+  try {
+    const r = await fetch('/dashboard/api/import-cache', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ folder })
+    });
+    if (r.ok) {
+      $('cache-import-msg').textContent = 'Cache import started in background!';
+    } else {
+      $('cache-import-msg').textContent = 'Cache import failed: HTTP ' + r.status;
+    }
+  } catch (e) {
+    $('cache-import-msg').textContent = 'Error: ' + e.message;
+  }
 }
 
 async function triggerUpdate() {

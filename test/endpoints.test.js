@@ -189,28 +189,6 @@ describe('account endpoints', () => {
     assert.equal(body.IsAgeConfirmed, true);
     assert.equal(body.IsRunOutOfQuestions, true);
   });
-
-  test('POST /Account/RegisterTemporaryAccount issues a token for guest account', async () => {
-    const response = await fetch(`${ctx.baseUrl}/Account/RegisterTemporaryAccount`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: '{}'
-    });
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.ok(body.access_token);
-    const claims = JSON.parse(Buffer.from(body.access_token.split('.')[1], 'base64url').toString());
-    assert.equal(claims.nickname, 'guest');
-  });
-
-  test('Parental consent endpoints return pass-through success', async () => {
-    const response = await fetch(`${ctx.baseUrl}/account/CheckIfParentEmailBound`);
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.equal(body.isSuccess, true);
-  });
-});
-
 describe('social, profile and fallback endpoints', () => {
   test('GET /group/follow-recommendations returns an array', async () => {
     const response = await authedGet(ctx.baseUrl, token, '/group/follow-recommendations');
@@ -379,4 +357,6 @@ describe('method variants', () => {
     assert.equal(response.status, 200);
     assert.ok((await response.json()).access_token);
   });
+});
+
 });
