@@ -7,7 +7,7 @@ import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
 import { setPublicBaseUrl } from './models.js';
 import { handleDashboard } from './dashboard.js';
-import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown, logCapturedRequest } from './http.js';
+import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown } from './http.js';
 
 function errorPayload(error) {
   if (error instanceof HttpError) {

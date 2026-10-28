@@ -4,6 +4,7 @@
 
 > **Credits & License:**
 > FreverS (Frever RDT), by fffoxie, with Jules.
+> Recreates the API contracts of the open-source **FriendFactory (Frever)** backend in a lightweight Node.js engine for Termux on Android.
 > This is a fan-made, non-commercial project and is NOT affiliated with or endorsed by Frever or Friend Factory. See `NOTICE` for details.
 
 ---
@@ -59,7 +60,7 @@ To generate the patched app (PAPK) that points to your local private server:
 
 ---
 
-## 3. Star Creators, Custom Assets & Advanced Customization
+## 3. Complete Termux No-Unity Workflow (All-in-One Asset Setup)
 
 - **Star Creators:** Included by default! Calling `/group/star-creators-in-your-country` returns available Star Creator profiles.
 - **Custom VRChat Avatars, Clothing & Maps:** Full retargeting, Blender FBX import, ARKit 52 facial blendshape sliders, and custom map scene guidelines are documented in detail in [`docs/ASSET_CREATION.md`](docs/ASSET_CREATION.md).
