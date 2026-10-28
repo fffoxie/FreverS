@@ -4,6 +4,9 @@ import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
 import { setPublicBaseUrl } from './models.js';
 import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown } from './http.js';
+import { handleAdmin } from './admin.js';
+import { serveStatic } from './static.js';
+import { setActiveDbPath } from './apk/tools.js';
 
 function errorPayload(error) {
   if (error instanceof HttpError) {
@@ -23,6 +26,7 @@ function errorPayload(error) {
 }
 
 export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.seed } = {}) {
+  setActiveDbPath(dbPath);
   const db = openDatabase(dbPath);
   const seedResult = seedAccounts(db, seed);
 
@@ -37,6 +41,37 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     }
     const method = (req.method || 'GET').toUpperCase();
     const path = normalizePath(url.pathname);
+
+    try {
+      const adminResult = await handleAdmin(req, res, url.pathname, db);
+      if (adminResult) {
+        logRequest({
+          method,
+          path: url.pathname,
+          status: adminResult.status,
+          bytes: adminResult.bytes,
+          ms: Math.round(Number(process.hrtime.bigint() - started) / 1e6),
+          note: 'admin'
+        });
+        return;
+      }
+      const staticResult = serveStatic(req, res, url.pathname);
+      if (staticResult) {
+        logRequest({
+          method,
+          path: url.pathname,
+          status: staticResult.status,
+          bytes: staticResult.bytes,
+          ms: Math.round(Number(process.hrtime.bigint() - started) / 1e6),
+          note: 'static'
+        });
+        return;
+      }
+    } catch (error) {
+      console.error('[admin]', error);
+      if (!res.headersSent) sendJson(res, 500, { error: 'server_error', error_description: error.message });
+      return;
+    }
 
     let parsed;
     try {

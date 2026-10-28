@@ -225,4 +225,47 @@ There is a separate OAuth-style `POST <auth base>/connect/token` call for login
   obvious. The server accepts the plausible `connect/token` paths and documents
   them as aliases.
 
-request/response models.
+## 11. APK redirection (implemented and verified)
+
+The host literals are in `global-metadata.dat`, not in `libil2cpp.so`. The v29
+layout is:
+
+- header at 0: sanity `0xfab11baf`, version 29
+- string-literal table at `0x100`, 258,680 bytes = 32,335 records of
+  `{ uint32 length; uint32 dataIndex; }`
+- literal data at `0x3f378`, 959,000 bytes, UTF-8 concatenated (no NULs)
+
+The five hosts each have exactly one record. The patcher overwrites the bytes
+with the local base URL (max 27 characters, because `https://dev.frever-api.com/`
+is the shortest slot), zero-fills the remaining old bytes and writes the new
+length into the record. No offsets move. The patched metadata still dumps
+correctly with Il2CppDumper (metadata v29, same code registration).
+
+Cleartext: the manifest has no `usesCleartextTraffic` attribute, and targetSdk
+34 blocks HTTP. The patcher changes two fixed-width AXML integers in
+`<uses-sdk>`: `minSdkVersion 28 -> 27`, `targetSdkVersion 34 -> 27`. targetSdk
+27 makes the platform default allow cleartext. This is less invasive than
+rebuilding the resource table and does not change the app package or version.
+
+Build pipeline (all on the phone):
+
+1. copy the source APK
+2. `unzip -p` the metadata and manifest (paths:
+   `assets/bin/Data/Managed/Metadata/global-metadata.dat` and
+   `AndroidManifest.xml`)
+3. patch both buffers
+4. `zip -X -0` the two entries back
+5. remove `META-INF/*.SF|RSA|DSA|EC`
+6. `zipalign -f 4`
+7. generate/keep a PKCS#12 keystore in `data/keys/`
+8. `apksigner sign` (v1+v2) and `apksigner verify`
+
+Verified output of the real APK: 227 MB, package `com.FriendFactory.Frever`
+4.0.5 (409), min/target 27, `zipalign -c 4` OK, `apksigner verify` OK, zero
+`*.frever-api.com` literals, five local URLs.
+
+Caveat: lowering targetSdk opts the app into legacy behaviour on Android 14/15.
+It was chosen because it needs no resource-table rebuild. If a device rejects it,
+the alternative is an `apksigner`-signed APK with a real
+`network_security_config` added via apktool.
+

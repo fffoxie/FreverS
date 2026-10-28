@@ -49,8 +49,11 @@ export function servicesUrls() {
   };
 }
 
-export function userBalance() {
-  return { SoftCurrencyAmount: 0, HardCurrencyAmount: 0 };
+export function userBalance(user) {
+  return {
+    SoftCurrencyAmount: Number(user?.soft_currency ?? 0),
+    HardCurrencyAmount: Number(user?.hard_currency ?? 0)
+  };
 }
 
 export function profileKpi() {
@@ -111,10 +114,14 @@ export function myProfile(user) {
     BirthDate: null,
     GenderId: null,
     AnalyticsEnabled: false,
-    UserBalance: userBalance(),
+    UserBalance: userBalance(user),
     LevelingProgress: null,
     CharacterAccess: 0,
     RegistrationDate: user.created_at ? `${user.created_at.replace(' ', 'T')}Z` : '1970-01-01T00:00:00Z',
+    IsPremium: Boolean(user.premium_until && new Date(user.premium_until) > new Date()),
+    PremiumUntil: user.premium_until || null,
+    IsAdmin: Boolean(user.is_admin),
+    AvatarUrl: user.avatar_asset_id ? `/assets/${user.avatar_asset_id}` : null,
     IsStarCreator: false,
     IsStarCreatorCandidate: false,
     FeatureSettings: null,

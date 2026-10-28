@@ -30,11 +30,23 @@ fi
 if command -v pkg >/dev/null 2>&1; then
   echo "[setup] updating package lists..."
   pkg update -y
-  echo "[setup] installing nodejs and git..."
-  pkg install -y nodejs git
+  echo "[setup] installing nodejs, git, Java and zip tools..."
+  pkg install -y nodejs git openjdk-17 zip unzip
+  echo "[setup] installing Android signing tools (best effort)..."
+  for package in apksigner zipalign; do
+    pkg install -y "$package" || echo "[setup] warning: package '$package' is not available; install an equivalent later."
+  done
 else
-  echo "[setup] 'pkg' not found; skipping apt install. Ensure node >= 22.13 and git are available."
+  echo "[setup] 'pkg' not found; skipping apt install. Ensure node >= 22.13, git, java and apksigner exist."
 fi
+
+for tool in apksigner zipalign keytool; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    echo "[setup] $tool: found"
+  else
+    echo "[setup] warning: $tool not found; APK generation will fail until it is installed."
+  fi
+done
 
 if ! command -v node >/dev/null 2>&1; then
   echo "[setup] ERROR: node is not installed" >&2

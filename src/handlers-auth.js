@@ -4,7 +4,8 @@ import {
   findUserById,
   verifyPassword,
   createRefreshToken,
-  consumeRefreshToken
+  consumeRefreshToken,
+  createAccount
 } from './db.js';
 import { HttpError } from './http.js';
 import { tokenResponse } from './models.js';
@@ -62,7 +63,18 @@ export async function login(ctx) {
   }
 
   const user = findUserByUsername(ctx.db, username) || findUserByUsername(ctx.db, username.split('@')[0]);
-  if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+  if (!user) {
+    if (!config.allowAnyAccount) throw new HttpError(400, 'Invalid username or password', 'invalid_grant');
+    if (username.length < 3 || password.length < 3) {
+      throw new HttpError(400, 'Username and password must be at least 3 characters', 'invalid_request');
+    }
+    const created = createAccount(ctx.db, { username, password });
+    const issued = createRefreshToken(ctx.db, created.id, config.refreshTokenTtlSeconds);
+    ctx.logNote = `auto-created user=${created.username}`;
+    console.log(`[accounts] auto-created ${created.username} (group ${created.group_id})`);
+    return { body: tokenResponse(issueAccessToken(created), issued.token) };
+  }
+  if (!verifyPassword(password, user.password_salt, user.password_hash)) {
     throw new HttpError(400, 'Invalid username or password', 'invalid_grant');
   }
 

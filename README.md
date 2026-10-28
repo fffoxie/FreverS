@@ -30,9 +30,60 @@ Social lists are empty arrays (there is no real social graph), and the official
 profile is a local placeholder group. All response shapes are documented in
 `docs/protocol.md`; every implemented route has an automated test.
 
+## Dashboard and pointed-APK builder
+
+Open `http://127.0.0.1:8080/admin` (or the phone's LAN address) after `npm start`.
+Sign in as `fffoxie` with the seeded password, or paste `data/admin-token.txt`.
+
+The dashboard manages users (soft/hard currency, premium days, admin flag,
+nickname, avatar), uploads avatars/music/accessories, and builds a **patched APK
+that points at your server**:
+
+- It takes the original Frever 4.0.5 APK you upload.
+- It replaces the five API hosts inside `global-metadata.dat` (the real string
+  literal table, lengths updated in place).
+- It lowers `minSdkVersion`/`targetSdkVersion` to 27 in the binary manifest so
+  Android permits cleartext HTTP to the local server.
+- It removes the old signature, zipaligns, and signs with a local key generated
+  on the phone.
+- It serves `FreverS-patched.apk` for download.
+
+Verified end-to-end against the real 217 MB APK: the output installs as
+`com.FriendFactory.Frever` 4.0.5 (409), is zipaligned, passes `apksigner verify`,
+and contains no `*.frever-api.com` host strings.
+
+The patched APK has a different signing key, so **uninstall the original Frever
+first**; Android will refuse an in-place update.
+
+The same dashboard is served by GitHub Pages from the `docs/` folder. In the
+repository: **Settings → Pages → Deploy from a branch → `main` / `/docs`**, then
+open `https://fffoxie.github.io/FreverS/`. A browser opened on the phone can reach
+`http://127.0.0.1:8080`, but an HTTPS page calling a LAN IP over HTTP is blocked
+as mixed content. For managing another device, open the dashboard served by the
+phone (`http://<phone-ip>:8080/admin`) instead.
+
+## Any account
+
+By default an unknown username creates a local account on its first password
+login (username and password at least 3 characters). The first account
+(`fffoxie`) is the administrator; new accounts are ordinary users. Disable this
+with `FREVERS_ALLOW_ANY_ACCOUNT=0`.
+
+## Reset and update
+
+```sh
+npm run reset          # deletes accounts, currency, uploads, build history
+npm run reset -- --hard  # also deletes the source APK and signing key
+npm run update         # git pull --ff-only + npm install, then restart
+```
+
+The database is migrated in place on start, so updating keeps accounts, currency,
+uploads and builds.
+
 ## Requirements
 
 - Node.js **22.13 or newer** (24.x recommended). The server uses the built-in `node:sqlite` module.
+- Java (`openjdk-17`), `apksigner`, `zipalign`, `zip`/`unzip` for the APK builder.
 - Termux from **F-Droid** on the phone, or any Linux/macOS machine for local
   development.
 - No npm dependencies, no compile step.
@@ -46,7 +97,8 @@ profile is a local placeholder group. All response shapes are documented in
 
    ```sh
    pkg update && pkg upgrade
-   pkg install nodejs git
+   pkg install nodejs git openjdk-17 zip unzip
+   pkg install apksigner zipalign   # for the APK builder
    node --version      # must be >= 22.13 (24.x recommended)
    ```
 
@@ -132,6 +184,10 @@ All settings are environment variables; there are no secrets in the repository.
 | `FREVERS_BRIDGE_MIN` / `FREVERS_BRIDGE_MAX` | `0.0.0` / `99.99.99` | accepted bridge versions |
 | `FREVERS_LOG_REQUESTS` | `1` | set `0` to silence per-request lines |
 | `FREVERS_LOG_BODY_PREVIEW` | `512` | bytes of an unknown request body to log |
+| `FREVERS_ALLOW_ANY_ACCOUNT` | `1` | unknown username creates an account on first login; `0` disables |
+| `FREVERS_ADMIN_TOKEN` | generated in `data/admin-token.txt` | dashboard token alternative to admin login |
+| `FREVERS_APK_PATH` | `data/apk/source.apk` | original APK used by the builder |
+| `FREVERS_KEYSTORE_PASS` | generated in `data/keys/keystore.pass` | APK signing key password |
 
 If the game runs on the same phone and something still connects through the LAN
 address, set `FREVERS_PUBLIC_BASE_URL=http://<LAN-IP>:8080` so the URLs the client
@@ -139,26 +195,31 @@ receives point back to the reachable address.
 
 ## Pointing the game at the server
 
-The APK is hard-wired to HTTPS hosts and, because it targets Android 14, it
-blocks cleartext HTTP. The stock APK therefore **cannot** be redirected by DNS
-alone; see `docs/analysis.md` §8 for the full reasoning. A working setup uses a
-patched client that:
+The stock APK is hard-wired to HTTPS hosts and, because it targets Android 14,
+blocks cleartext HTTP. DNS alone cannot fix that. Use the dashboard's **APK
+builder** (see above) instead:
 
-1. replaces the five `*.frever-api.com` host strings with the local base URL,
-   and
-2. enables cleartext traffic for the app (`usesCleartextTraffic="true"` or a
-   `network_security_config` that permits the local host).
+1. Upload the original `Frever_4.0.5_APKPure.apk` once.
+2. Enter the address the phone will use (`http://127.0.0.1:8080` on the same
+   phone, or `http://<LAN-IP>:8080` on another device). The address must be at
+   most 27 characters because it replaces Frever's shortest host literal.
+3. Build and download `FreverS-patched.apk`, uninstall the original Frever, then
+   install the patched APK.
 
-The server does not install a CA, does not disable certificate validation, and
-does not speak TLS. If you prefer to keep the original HTTPS URLs, terminate TLS
-with a trusted certificate for those names and redirect at the network layer;
-without an app-level trust exception Android will reject a local CA on targetSdk
-34.
+The builder does not need a CA and does not disable TLS verification: it lowers
+the manifest target to 27 so the platform's default cleartext policy allows your
+plain-HTTP local server, and rewrites the real host literals in the IL2CPP
+metadata. If you later want HTTPS, terminate TLS with a certificate Android
+trusts and use an `https://` base URL instead.
+
+Do not install the patched APK on top of the original: the local signing key is
+different, so Android requires an uninstall first (which deletes the original
+app's local data).
 
 ## Tests and smoke test
 
 ```sh
-npm test        # 24 tests, one per implemented endpoint + error/404 cases
+npm test        # 36 tests: endpoints, admin API, login, APK patchers
 npm run smoke   # requires a running server
 ```
 
@@ -210,6 +271,36 @@ and avatar/group data, then `SMOKE OK`.
 
    Add exactly that route, with its real shape from the APK, and repeat.
 
+## Limits: what this build does **not** do
+
+These were requested but cannot be delivered honestly from the APK and this
+server. They are **not implemented**, and no placeholder catalog is generated,
+because that would invent data the client cannot use.
+
+| Requested | Status | Why / what is missing |
+| --- | --- | --- |
+| Entire original catalog: all animations, accessories, makeup, base characters, maps | **Not implemented** | The APK contains Unity serialized data/asset files, not a catalog the server can enumerate. The live game receives catalog metadata and bundle URLs from `AssetManager`/`ClientServer` endpoints whose protobuf shapes were not recovered. Serving guessed JSON would not make the client load it. |
+| VRChat addon | **Not applicable** | No VRChat integration exists in the APK. Frever is an Android Unity app; there is no addon to "enable". |
+| Blender addon | **Not applicable** | No Blender addon is bundled or referenced. A converter would be a separate project, not a FreverS server endpoint. |
+| Mixamo custom animations | **Not implemented** | The client loads Unity AssetBundles with Frever's rig/animation setup. An FBX from Mixamo cannot be injected into the installed APK by the server. This needs a Unity asset pipeline plus client import code. |
+| Custom maps | **Not implemented** | Same asset-bundle and level-protocol problem as animations. |
+| Export finished videos to the gallery | **Not implemented** | Video stitching/encoding happens in the client's native plugins. The confirmed server flow has no finished-video upload. Exporting to Android MediaStore requires a client-side patch, not a server route. |
+| Same studio as Frever | **Not implemented** | The studio is client UI over catalog/video endpoints. With the catalog and video protocols unknown, the server cannot reproduce it. |
+
+What would unblock these:
+
+1. A device trace or a captured session of the original client while it loads
+   the store/catalog (method, path, protobuf/JSON body and response).
+2. The AssetManager bundle manifest mapping bundle names/URLs to the local
+   `assets/bin/Data` files.
+3. For video export, a client patch using Android `MediaStore` or a share intent,
+   plus knowledge of where the encoded file is written.
+4. For Mixamo/custom maps, a Unity project that builds compatible bundles and a
+   client hook that accepts them.
+
+Until item 1/2 exist, the dashboard can store and serve your own uploaded
+avatars/music/accessories, but the game will not display them in its store.
+
 ## Troubleshooting
 
 | Symptom | Cause / fix |
@@ -228,18 +319,25 @@ and avatar/group data, then `SMOKE OK`.
 
 ```text
 src/config.js        environment + defaults
-src/db.js            SQLite schema, scrypt hashing, account seeding
+src/db.js            SQLite schema/migrations, scrypt, accounts, currency
 src/auth.js          JWT issue/verify, Basic/Bearer parsing
 src/http.js          body parsing (JSON/form/multipart), logging
 src/models.js        confirmed client model shapes
-src/handlers-*.js    endpoint handlers
-src/endpoints.js     route table
-src/server.js        HTTP server + 404 logging
-test/                node:test suite (one test per endpoint)
+src/handlers-*.js    client endpoint handlers
+src/endpoints.js     client route table
+src/admin*.js        dashboard API (auth, users, assets, builds)
+src/apk/             IL2CPP metadata + AXML patchers, signing pipeline
+src/static.js        serves docs/ dashboard at / and /admin
+src/server.js        HTTP server, admin/static dispatch, 404 logging
+docs/                protocol/analysis + dashboard (Pages: main /docs)
+test/                35 node:test tests
 scripts/smoke.js     login + avatar/group smoke test
 scripts/setup-termux.sh
-docs/analysis.md     APK, IL2CPP, host, TLS findings
+scripts/reset-server.sh
+scripts/update-server.sh
+docs/analysis.md     APK, IL2CPP, host, TLS, APK-patch findings
 docs/protocol.md     endpoint reference and UNKNOWN list
+docs/final-report.md
 ```
 
 ## Documentation

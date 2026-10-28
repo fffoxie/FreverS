@@ -102,6 +102,24 @@ adds no security for a two-user LAN server.
 call found).
 
 
+
+### Local server additions (not part of the original client)
+
+- **Any-account login.** When `username` is unknown and
+  `FREVERS_ALLOW_ANY_ACCOUNT != 0`, `POST /connect/token` creates a local user
+  with the supplied password and returns a normal token. Existing users still
+  require the correct password. This is a local convenience, not original
+  behaviour.
+- **Admin/dashboard API.** `/admin/api/*` is a separate local API used by the
+  web dashboard: login, user currency/premium/admin/nickname/avatar updates,
+  asset uploads, APK upload, build jobs and downloads. It is authenticated with
+  an admin JWT or `X-Admin-Token`; it is not called by the game.
+- **Uploaded assets** are stored under `data/assets/` and served publicly at
+  `/assets/{id}`. The game does not request these URLs in the confirmed flows;
+  they are dashboard content until the catalog protocol is known.
+- **APK builder.** `/admin/api/build` produces a patched, signed APK (see
+  `docs/analysis.md` §11). It is a local tool, not a client endpoint.
+
 ## 4. Implemented endpoints
 
 Status legend: **IMPLEMENTED** = route + documented shape + automated test.

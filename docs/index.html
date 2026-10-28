@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FreverS — private server dashboard</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Frever<span>S</span></div>
+    <div class="conn">
+      <span id="connDot" class="dot"></span>
+      <span id="connLabel">not connected</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="loginView" class="card narrow">
+      <h1>Connect to your FreverS</h1>
+      <p class="muted">The dashboard talks to the server running in Termux. On the same phone use
+        <code>http://127.0.0.1:8080</code>; from another device use the phone's LAN address.</p>
+      <label>Server URL
+        <input id="apiBase" type="url" placeholder="http://127.0.0.1:8080" autocomplete="url">
+      </label>
+      <div class="grid2">
+        <label>Admin username
+          <input id="loginUser" value="fffoxie" autocomplete="username">
+        </label>
+        <label>Password
+          <input id="loginPass" type="password" autocomplete="current-password">
+        </label>
+      </div>
+      <button id="loginBtn" class="primary">Sign in</button>
+      <p class="muted small">The first account (<code>fffoxie</code>) is the administrator. You can
+        also paste the token from <code>data/admin-token.txt</code> below.</p>
+      <details>
+        <summary>Advanced: use admin token</summary>
+        <label>Admin token
+          <input id="adminToken" type="password" placeholder="FREVERS_ADMIN_TOKEN">
+        </label>
+        <button id="tokenBtn">Use token</button>
+      </details>
+      <p id="loginError" class="error"></p>
+    </section>
+
+    <div id="appView" hidden>
+      <nav class="tabs">
+        <button data-tab="overview" class="active">Overview</button>
+        <button data-tab="users">Users</button>
+        <button data-tab="assets">Assets</button>
+        <button data-tab="build">APK builder</button>
+        <button data-tab="setup">Setup</button>
+        <button id="logoutBtn" class="ghost right">Sign out</button>
+      </nav>
+
+      <section data-panel="overview" class="panel">
+        <div class="cards">
+          <div class="stat"><span id="statUsers">0</span><small>users</small></div>
+          <div class="stat"><span id="statAssets">0</span><small>assets</small></div>
+          <div class="stat"><span id="statBuilds">0</span><small>builds</small></div>
+          <div class="stat"><span id="statSource">—</span><small>source APK</small></div>
+        </div>
+        <div class="card">
+          <h2>Server</h2>
+          <dl class="kv">
+            <dt>Public URL</dt><dd id="srvUrl">—</dd>
+            <dt>Version</dt><dd id="srvVersion">—</dd>
+            <dt>Max patched URL length</dt><dd id="srvMax">—</dd>
+            <dt>Official group id</dt><dd id="srvOfficial">—</dd>
+          </dl>
+          <p class="muted small">Premium, currency and uploaded content are stored locally. The APK
+            still uses the client's own screens; these values are applied by the server.</p>
+        </div>
+
+      <section data-panel="users" class="panel" hidden>
+        <div class="card">
+          <h2>Users</h2>
+          <p class="muted small">Give currency, grant premium days (0 removes it), promote admins, or
+            assign an uploaded avatar. Changes are saved to SQLite immediately.</p>
+          <div id="usersTable" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <section data-panel="assets" class="panel" hidden>
+        <div class="card">
+          <h2>Upload content</h2>
+          <div class="grid2">
+            <label>Type
+              <select id="assetType">
+                <option value="avatar">Avatar</option>
+                <option value="music">Music</option>
+                <option value="accessory">Accessory</option>
+              </select>
+            </label>
+            <label>Name
+              <input id="assetName" placeholder="My avatar">
+            </label>
+          </div>
+          <label>File (max 50 MB)
+            <input id="assetFile" type="file">
+          </label>
+          <button id="assetUploadBtn" class="primary">Upload</button>
+          <p id="assetMsg" class="muted small"></p>
+          <div id="assetsTable" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <section data-panel="build" class="panel" hidden>
+        <div class="card">
+          <h2>Create pointed APK</h2>
+          <p class="muted small">The original APK is patched on the phone: the five Frever hosts in
+            <code>global-metadata.dat</code> are replaced and the manifest target is lowered so
+            cleartext HTTP is allowed. The result is re-signed with a local key.</p>
+          <div id="sourceBox" class="notice"></div>
+          <div class="row">
+            <input id="apkFile" type="file" accept=".apk,application/vnd.android.package-archive">
+            <button id="apkUploadBtn">Upload original APK</button>
+          </div>
+          <p id="apkMsg" class="muted small"></p>
+          <label>Server URL baked into the APK
+            <input id="buildBaseUrl" placeholder="http://127.0.0.1:8080">
+          </label>
+          <p class="muted small" id="buildHint"></p>
+          <button id="buildBtn" class="primary">Build patched APK</button>
+          <div id="buildProgress" class="progress" hidden><div id="buildBar"></div></div>
+          <pre id="buildLog" class="log"></pre>
+          <div id="buildResult" class="notice" hidden></div>
+        </div>
+      </section>
+
+      <section data-panel="setup" class="panel" hidden>
+        <div class="card">
+          <h2>Termux setup</h2>
+          <ol class="steps">
+            <li>Install <b>Termux from F-Droid</b> (not the Play Store).</li>
+            <li>Run <code>pkg update &amp;&amp; pkg install nodejs git</code></li>
+            <li>Run <code>git clone https://github.com/fffoxie/FreverS.git &amp;&amp; cd FreverS &amp;&amp; bash scripts/setup-termux.sh</code></li>
+            <li>Start <code>npm start</code> and keep Termux awake with <code>termux-wake-lock</code>.</li>
+            <li>Open this dashboard on the phone: <code id="setupUrl">http://127.0.0.1:8080/admin</code></li>
+          </ol>
+          <h3>Install the patched APK</h3>
+          <p class="muted">The patched APK has a different signature, so uninstall the original
+            Frever first (this deletes its local data). Then install the downloaded
+            <code>FreverS-patched.apk</code>. If Android blocks it, allow "install unknown apps"
+            for your browser or file manager.</p>
+          <h3>GitHub Pages</h3>
+          <p class="muted">The same dashboard can be published from the <code>web/</code> folder.
+            Browsers block HTTPS pages from calling a plain-HTTP LAN address, so for full control
+            open the dashboard served by the phone. From the phone itself,
+            <code>http://127.0.0.1:8080/admin</code> is the reliable address.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="muted small">FreverS · local only · no telemetry · <span id="footerUrl"></span></footer>
+  <script src="./app.js"></script>
+</body>
+</html>
+
+      </section>

@@ -1,6 +1,6 @@
 {
   "name": "frevers",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-only private server for the Android game Frever 4.0.5 (com.FriendFactory.Frever)",
   "type": "module",
@@ -11,7 +11,9 @@
     "start": "node src/server.js",
     "test": "node --test test/*.test.js",
     "smoke": "node scripts/smoke.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "reset": "bash scripts/reset-server.sh",
+    "update": "bash scripts/update-server.sh"
   },
   "dependencies": {}
 }

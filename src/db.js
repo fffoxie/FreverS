@@ -45,6 +45,11 @@ export function openDatabase(dbPath = config.dbPath) {
       is_artist INTEGER NOT NULL DEFAULT 0,
       main_character_id INTEGER,
       onboarding_completed INTEGER NOT NULL DEFAULT 1,
+      soft_currency INTEGER NOT NULL DEFAULT 0,
+      hard_currency INTEGER NOT NULL DEFAULT 0,
+      premium_until TEXT,
+      is_admin INTEGER NOT NULL DEFAULT 0,
+      avatar_asset_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -58,9 +63,46 @@ export function openDatabase(dbPath = config.dbPath) {
       quiz_state TEXT NOT NULL DEFAULT '{}',
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS assets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK (type IN ('avatar', 'music', 'accessory')),
+      name TEXT NOT NULL,
+      filename TEXT NOT NULL UNIQUE,
+      mime TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
+  migrate(db);
   return db;
 }
+
+/** Additive migrations for databases created by earlier versions. */
+function migrate(db) {
+  const columns = new Set(db.prepare('PRAGMA table_info(users)').all().map((row) => row.name));
+  const additions = [
+    ['soft_currency', 'INTEGER NOT NULL DEFAULT 0'],
+    ['hard_currency', 'INTEGER NOT NULL DEFAULT 0'],
+    ['premium_until', 'TEXT'],
+    ['is_admin', 'INTEGER NOT NULL DEFAULT 0'],
+    ['avatar_asset_id', 'INTEGER']
+  ];
+  for (const [name, type] of additions) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE users ADD COLUMN ${name} ${type}`);
+  }
+  // The first seeded account is the admin unless an admin already exists.
+  const adminCount = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
+  if (adminCount === 0) {
+    const first = db.prepare('SELECT id FROM users ORDER BY id LIMIT 1').get();
+    if (first) db.prepare('UPDATE users SET is_admin = 1 WHERE id = ?').run(first.id);
+  }
+}
+
 
 /**
  * Seed the two local accounts. Passwords come from the environment; when they
@@ -78,19 +120,19 @@ export function seedAccounts(db, { user1, user2, password1, password2 } = config
   if (!password2) generated.push({ username: user2, password: p2 });
 
   const insert = db.prepare(`
-    INSERT INTO users (username, nickname, email, group_id, password_salt, password_hash)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO users (username, nickname, email, group_id, password_salt, password_hash, is_admin)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   const accounts = [
-    { username: user1, nickname: user1, email: `${user1}@localhost`, groupId: 1 },
-    { username: user2, nickname: user2, email: `${user2}@localhost`, groupId: 2 }
+    { username: user1, nickname: user1, email: `${user1}@localhost`, groupId: 1, admin: 1 },
+    { username: user2, nickname: user2, email: `${user2}@localhost`, groupId: 2, admin: 0 }
   ];
   db.exec('BEGIN');
   try {
     for (const [index, account] of accounts.entries()) {
       const password = index === 0 ? p1 : p2;
       const { salt, hash } = hashPassword(password);
-      insert.run(account.username, account.nickname, account.email, account.groupId, salt, hash);
+      insert.run(account.username, account.nickname, account.email, account.groupId, salt, hash, account.admin);
     }
     db.exec('COMMIT');
   } catch (error) {
@@ -115,6 +157,21 @@ export function seedAccounts(db, { user1, user2, password1, password2 } = config
 
 export function findUserByUsername(db, username) {
   return db.prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE').get(username);
+}
+
+export function createAccount(db, { username, password, nickname = username, email = `${username}@localhost`, isAdmin = 0 }) {
+  const existing = findUserByUsername(db, username);
+  if (existing) return existing;
+  const nextGroup = (db.prepare('SELECT COALESCE(MAX(group_id), 0) + 1 AS n FROM users').get().n) || 1;
+  const uniqueGroup = Math.max(nextGroup, 3);
+  const { salt, hash } = hashPassword(password);
+  const info = db
+    .prepare(
+      'INSERT INTO users (username, nickname, email, group_id, password_salt, password_hash, is_admin) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?)'
+    )
+    .run(username, nickname, email, uniqueGroup, salt, hash, isAdmin);
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(Number(info.lastInsertRowid));
 }
 
 export function findUserById(db, id) {

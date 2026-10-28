@@ -46,7 +46,10 @@ export const config = {
     password2: process.env.FREVERS_USER2_PASSWORD || ''
   },
   // Optional local timezone hint; the client sends timestamps itself.
-  logLevel: process.env.FREVERS_LOG_LEVEL || 'info'
+  logLevel: process.env.FREVERS_LOG_LEVEL || 'info',
+  // Local convenience: an unknown username creates an account on first login.
+  allowAnyAccount: process.env.FREVERS_ALLOW_ANY_ACCOUNT !== '0',
+  allowAnyAccountHint: process.env.FREVERS_ANY_ACCOUNT_HINT || 'any password (3+ characters) creates the account'
 };
 
 export default config;

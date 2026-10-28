@@ -59,8 +59,8 @@ export function currentUser(ctx) {
 }
 
 export function currentBalance(ctx) {
-  authenticate(ctx, true);
-  return { body: userBalance() };
+  const user = authenticate(ctx, true);
+  return { body: userBalance(user) };
 }
 
 export function officialProfile(ctx) {
