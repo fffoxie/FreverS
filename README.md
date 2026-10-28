@@ -72,7 +72,7 @@ To generate the patched app (PAPK) that points to your local private server:
 | Server Dies When Screen Locks | Run `termux-wake-lock` and disable battery optimization for Termux in Android Settings. |
 | App Not Installed / Not Compatible | Frever 4.0.5 is 32-bit ARM (`armeabi-v7a`). Some 64-bit-only phones (e.g. newer Galaxy S24/Pixel 8) block 32-bit apps. On 32-bit-capable devices (like Galaxy S20), ensure original key is uninstalled first and unknown sources permission is granted. |
 | Missing Original APK Error | Copy your Frever APK into `analysis/Frever_4.0.5_APKPure.apk` or specify path in the PAPK control panel. |
-| Port 8080 Already Busy | Run `export FREVERS_PORT=8081 && bash scripts/start.sh` |
+| Port 8080 Already Busy | Stop the existing process using port 8080 or restart Termux. |
 | System Health Diagnostics | Run `bash scripts/doctor.sh` to test Git, Node version, SQLite DB, port, and unit tests. |
 | Security & Secrets Check | Run `bash scripts/check-no-secrets.sh` to verify no sensitive keys or APKs are tracked in git. |
 

@@ -91,7 +91,7 @@ if [ "$PORT_BUSY" -eq 1 ]; then
     echo "OK (FreverS server is actively listening on port $PORT)"
   else
     echo "FAILED (Port $PORT is occupied by another process)"
-    echo "  FIX: Run 'FREVERS_PORT=8081 bash scripts/start.sh' or stop the process on port $PORT"
+    echo "  FIX: Stop the existing process on port $PORT or restart Termux"
     FAILED=1
   fi
 else

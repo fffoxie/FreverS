@@ -31,7 +31,7 @@ fi
 
 if [ "$PORT_BUSY" -eq 1 ]; then
   echo "[start] ERROR: Port $PORT is already in use." >&2
-  echo "[start] FIX: Stop the process using port $PORT, or run with 'FREVERS_PORT=8081 bash scripts/start.sh'." >&2
+  echo "[start] FIX: Stop the existing process using port $PORT or restart Termux." >&2
   exit 1
 fi
 

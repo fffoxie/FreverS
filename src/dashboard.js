@@ -161,6 +161,14 @@ export async function handleDashboard({ req, res, method, path: p, db, body = {}
     spawn(process.execPath, args, { cwd: root, detached: true, stdio: 'ignore' }).unref();
     return { status: 202, bytes: send(res, 202, 'application/json', JSON.stringify({ started: true })) };
   }
+  if (p === '/dashboard/api/update' && method === 'POST') {
+    const remote = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+    if (!/^(127\.|::1$|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(remote)) {
+      return { status: 403, bytes: send(res, 403, 'application/json', JSON.stringify({ error: 'local network only' })) };
+    }
+    const updateRes = spawn('git', ['pull', 'origin', 'main'], { cwd: root, encoding: 'utf8' });
+    return { status: 200, bytes: send(res, 200, 'application/json', JSON.stringify({ status: 'git pull initiated' })) };
+  }
   const download = /^\/dashboard\/download\/([A-Za-z0-9_.\-]+\.apk)$/.exec(p);
   if (download && method === 'GET') {
     const file = path.join(outDir, download[1]);

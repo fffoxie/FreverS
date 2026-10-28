@@ -267,6 +267,8 @@ li { margin: 4px 0; }
     <div class="card">
       <button type="button" onclick="refresh()">Refresh Status Now</button>
       <button type="button" onclick="copyLanUrl()">Copy Server LAN Address</button>
+      <button type="button" onclick="triggerUpdate()" style="margin-top:10px; background:var(--primary); color:#fff; border-color:var(--primary)">Check & Pull Updates from GitHub</button>
+      <div id="update-msg" class="muted" style="margin-top:6px" aria-live="polite"></div>
     </div>
 
     <h2>Recent Server Logs</h2>
@@ -395,6 +397,20 @@ async function triggerPapk() {
   $('papk-btn').disabled = false;
   $('papk-retry-btn').disabled = false;
   refresh();
+}
+
+async function triggerUpdate() {
+  $('update-msg').textContent = 'Pulling updates from GitHub...';
+  try {
+    const r = await fetch('/dashboard/api/update', { method: 'POST' });
+    if (r.ok) {
+      $('update-msg').textContent = 'Git pull initiated! Restart server in Termux if changes were fetched.';
+    } else {
+      $('update-msg').textContent = 'Update failed: HTTP ' + r.status;
+    }
+  } catch (e) {
+    $('update-msg').textContent = 'Update error: ' + e.message;
+  }
 }
 
 async function refresh() {
