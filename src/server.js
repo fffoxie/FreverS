@@ -40,7 +40,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
       return;
     }
     const method = (req.method || 'GET').toUpperCase();
-    const path = normalizePath(url.pathname);
+    const reqPath = normalizePath(url.pathname);
 
     let parsed;
     try {
@@ -48,7 +48,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     } catch (error) {
       const { status, payload } = errorPayload(error);
       sendJson(res, status, payload);
-      logRequest({ method, path, status, bytes: 0, ms: Number(process.hrtime.bigint() - started) / 1e6 });
+      logRequest({ method, path: reqPath, status, bytes: 0, ms: Number(process.hrtime.bigint() - started) / 1e6 });
       return;
     }
 
@@ -185,7 +185,7 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
 
     logRequest({
       method,
-      path,
+      path: reqPath,
       status,
       bytes,
       ms: Math.round(Number(process.hrtime.bigint() - started) / 1e6),

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import nodePath from 'node:path';
 import { config } from './config.js';
 
 export function logFilePath() {
@@ -11,7 +11,7 @@ function emit(line) {
   const file = logFilePath();
   if (!file) return;
   try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.mkdirSync(nodePath.dirname(file), { recursive: true });
     fs.appendFileSync(file, `${new Date().toISOString()} ${line}\n`);
   } catch {
     // logging must never break a request
@@ -116,14 +116,14 @@ export function sendEmpty(res, status = 200) {
 
 export function logRequest(entry) {
   if (!config.logRequests) return;
-  const { method, path, status, bytes, ms, note } = entry;
+  const { method, path: reqPath, status, bytes, ms, note } = entry;
   const suffix = note ? ` ${note}` : '';
-  emit(`[http] ${method} ${path} ${status} ${bytes}B ${ms}ms${suffix}`);
+  emit(`[http] ${method} ${reqPath} ${status} ${bytes}B ${ms}ms${suffix}`);
 }
 
 export function logUnknown({ method, path, bodySize, contentType, preview, raw, headers }) {
   emit(
-    `[unknown-route] method=${method} path=${path} bodySize=${bodySize} contentType=${contentType || '-'}` +
+    `[unknown-route] method=${method} path=${reqPath} bodySize=${bodySize} contentType=${contentType || '-'}` +
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );
   if (process.env.FREVERS_CAPTURE === '1') {

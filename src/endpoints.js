@@ -55,6 +55,30 @@ export const endpoints = [
     description: 'OAuth password / refresh_token grant (AuthService.LogInAsync / RenewToken)'
   },
   {
+    id: 'register-temporary-account',
+    method: 'POST',
+    paths: [
+      '/Account/RegisterTemporaryAccount',
+      '/account/RegisterTemporaryAccount',
+      '/account/registertemporaryaccount',
+      '/api/Account/RegisterTemporaryAccount'
+    ],
+    handler: registerTemporaryAccount,
+    description: 'Register temporary guest account (AuthService.RegisterTemporaryAccount)'
+  },
+  {
+    id: 'check-parent-email-bound',
+    method: 'GET',
+    paths: [
+      '/account/CheckIfParentEmailBound',
+      '/Account/CheckIfParentEmailBound',
+      '/account/checkifparentemailbound',
+      '/api/account/CheckIfParentEmailBound'
+    ],
+    handler: parentalConsent,
+    description: 'Check if parent email bound'
+  },
+  {
     id: 'client-urls',
     method: 'GET',
     paths: [
