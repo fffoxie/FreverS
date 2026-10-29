@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package frever.startpack.common;
+
+// C# Source: Frever.ClientService.Contract.Common.FileInfo.cs
+message FileInfo {
+  int32 extension = 10;
+  int32 file = 11;
+  optional int32 platform = 12;
+  optional int32 resolution = 13;
+  int32 source = 14;
+  string version = 15;
+  string unity_version = 16;
+  string asset_manager_version = 17;
+  repeated string tags = 18;
+}

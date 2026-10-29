@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+package frever.startpack.metadata;
+
+import "docs/schemas/start-pack/Common.proto";
+
+// C# Source: Frever.ClientService.Contract.StartPack.Metadata.MetadataPack.cs
+message MetadataPack {
+  repeated BodyAnimationCategory body_animation_categories = 10;
+  repeated CameraAnimationType camera_animation_types = 11;
+  repeated CameraCategory camera_categories = 12;
+  repeated CameraFilterCategory camera_filter_categories = 13;
+  repeated CharacterSpawnPositionFormationType character_spawn_position_formation_types = 14;
+  repeated CreatorBadge creator_badges = 15;
+  repeated Gender genders = 16;
+  repeated Genre genres = 17;
+  repeated UmaBundleFullInfo global_uma_bundles = 18;
+  repeated MovementType movement_types = 19;
+  repeated OnboardingQuestGroup onboarding_quests = 20;
+  repeated SetLocationCategory set_location_categories = 21;
+  repeated SpawnPositionSpaceSize spawn_position_space_sizes = 22;
+  repeated TemplateCategory template_categories = 23;
+  repeated UmaAdjustment uma_adjustments = 24;
+  repeated UmaBundleType uma_bundle_types = 25;
+  repeated UmaSharedColor uma_shared_colors = 26;
+  repeated UnityAssetType unity_asset_types = 27;
+  int32 unlock_create_template_from_video_on_level = 28;
+  repeated VfxCategory vfx_categories = 29;
+  repeated VoiceFilterCategory voice_filter_categories = 30;
+  repeated VoiceFilterFullInfo voice_filters = 31;
+  repeated WardrobeCategory wardrobe_categories = 32;
+  repeated WardrobeCategoryType wardrobe_category_types = 33;
+  int32 unlock_video_to_feed_on_level = 34;
+  int32 unlock_crew_creation_on_level = 35;
+  repeated ThemeCollectionInfo theme_collection = 36;
+  map<int32, string> template_from_video_restriction_reasons = 37;
+  CaptionMetadata caption_metadata = 38;
+  EditorMetadata editor_metadata = 39;
+  repeated IntellectualProperty intellectual_property = 40;
+  repeated Universe universes = 41;
+  repeated FeatureFlag feature_flags = 42;
+}
+
+message BodyAnimationCategory {
+  bool has_new = 10;
+  int64 id = 11;
+  string name = 12;
+  int32 sort_order = 13;
+}
+
+message CameraAnimationType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message CameraCategory {
+  int64 id = 10;
+  string name = 11;
+  int32 sort_order = 12;
+}
+
+message CameraFilterCategory {
+  int64 id = 10;
+  string name = 11;
+  int32 sort_order = 12;
+}
+
+message CharacterSpawnPositionFormationType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message CreatorBadge {
+  int64 id = 10;
+  string name = 11;
+  int32 score_requirement = 12;
+}
+
+message Gender {
+  int64 id = 10;
+  string name = 11;
+}
+
+message Genre {
+  int64 id = 10;
+  string name = 11;
+}
+
+message UmaBundleFullInfo {
+  int64 id = 10;
+  string name = 11;
+  repeated frever.startpack.common.FileInfo files = 12;
+}
+
+message MovementType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message OnboardingQuestGroup {
+  int64 id = 10;
+  string title = 11;
+}
+
+message SetLocationCategory {
+  bool has_new = 10;
+  int64 id = 11;
+  string name = 12;
+  int32 sort_order = 13;
+}
+
+message SpawnPositionSpaceSize {
+  int64 id = 10;
+  string name = 11;
+}
+
+message TemplateCategory {
+  int64 id = 10;
+  string name = 11;
+  int32 sort_order = 12;
+}
+
+message UmaAdjustment {
+  int64 id = 10;
+  string name = 11;
+  int32 sort_order = 12;
+}
+
+message UmaBundleType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message UmaSharedColor {
+  int64 id = 10;
+  string name = 11;
+  int32 shared_color_id = 12;
+}
+
+message UnityAssetType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message VfxCategory {
+  bool has_new = 10;
+  int64 id = 11;
+  string name = 12;
+  int32 sort_order = 13;
+}
+
+message VoiceFilterCategory {
+  int64 id = 10;
+  string name = 11;
+  int32 sort_order = 12;
+}
+
+message VoiceFilterFullInfo {
+  int64 id = 10;
+  string name = 11;
+  repeated frever.startpack.common.FileInfo files = 12;
+}
+
+message WardrobeCategory {
+  repeated frever.startpack.common.FileInfo files = 10;
+  bool has_new = 11;
+  bool has_sub_category_all = 12;
+  int64 id = 13;
+  string name = 14;
+  int32 sort_order = 15;
+  repeated WardrobeSubCategory sub_categories = 16;
+  int64 wardrobe_category_type_id = 17;
+}
+
+message WardrobeCategoryType {
+  int64 id = 10;
+  string name = 11;
+}
+
+message WardrobeSubCategory {
+  bool has_new = 10;
+  int64 id = 11;
+  string name = 12;
+  int32 sort_order = 13;
+  repeated int64 uma_adjustments = 14;
+  optional int32 uma_shared_color_id = 15;
+  bool has_free_assets = 16;
+  bool keep_on_undressing = 17;
+}
+
+message ThemeCollectionInfo {
+  int64 id = 10;
+  string title = 11;
+}
+
+message CaptionMetadata {
+  int32 max_length = 10;
+}
+
+message EditorMetadata {
+  bool can_create_characters = 10;
+  bool can_use_characters = 11;
+  bool supports_selfie_to_avatar = 12;
+}
+
+message IntellectualProperty {
+  int64 id = 10;
+  string name = 11;
+}
+
+message Universe {
+  int64 id = 10;
+  string name = 11;
+}
+
+message FeatureFlag {
+  string key = 10;
+  bool enabled = 11;
+}
