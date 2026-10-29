@@ -16,24 +16,31 @@ fi
 PORT="${FREVERS_PORT:-${PORT:-8080}}"
 HOST="${FREVERS_HOST:-0.0.0.0}"
 
-# Check if port is already in use using available tools (lsof, nc, ss, netstat).
-# If none of these tools are present, Node.js will fall back to catching EADDRINUSE during startup.
-PORT_BUSY=0
-if command -v lsof >/dev/null 2>&1; then
-  lsof -i :"$PORT" >/dev/null 2>&1 && PORT_BUSY=1
-elif command -v nc >/dev/null 2>&1; then
-  nc -z 127.0.0.1 "$PORT" >/dev/null 2>&1 && PORT_BUSY=1
-elif command -v ss >/dev/null 2>&1; then
-  ss -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
-elif command -v netstat >/dev/null 2>&1; then
-  netstat -tuln 2>/dev/null | grep -q ":$PORT " && PORT_BUSY=1
-fi
+# Helper function to kill processes using the port or running src/server.js
+kill_existing_server() {
+  echo "[start] Clearing any existing server process on port $PORT..."
+  if command -v lsof >/dev/null 2>&1; then
+    PIDS="$(lsof -t -i :"$PORT" 2>/dev/null || true)"
+    if [ -n "$PIDS" ]; then
+      echo "[start] Killing process(es) on port $PORT: $PIDS"
+      kill -9 $PIDS 2>/dev/null || true
+    fi
+  elif command -v fuser >/dev/null 2>&1; then
+    fuser -k -9 "$PORT/tcp" 2>/dev/null || true
+  fi
 
-if [ "$PORT_BUSY" -eq 1 ]; then
-  echo "[start] ERROR: Port $PORT is already in use." >&2
-  echo "[start] FIX: Stop the existing process using port $PORT or restart Termux." >&2
-  exit 1
-fi
+  # Secondary check for Node server process
+  if command -v pgrep >/dev/null 2>&1; then
+    NODE_PIDS="$(pgrep -f "node.*src/server.js" 2>/dev/null || true)"
+    if [ -n "$NODE_PIDS" ]; then
+      echo "[start] Killing existing server PID(s): $NODE_PIDS"
+      kill -9 $NODE_PIDS 2>/dev/null || true
+    fi
+  fi
+  sleep 1
+}
+
+kill_existing_server
 
 # Keep the CPU awake while the server runs (Termux only, best effort).
 if command -v termux-wake-lock >/dev/null 2>&1; then
