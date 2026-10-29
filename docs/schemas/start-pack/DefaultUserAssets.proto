@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package frever.startpack.userassets;
+
+import "docs/schemas/start-pack/Common.proto";
+
+// C# Source: Frever.ClientService.Contract.StartPack.UserAssets.DefaultUserAssets.cs
+message DefaultUserAssets {
+  bool has_invitation_reward = 10;
+  optional int64 main_character_id = 11;
+  UserAssetsData purchased_assets_data = 12;
+  int64 template_event_id = 13;
+  int64 template_id = 14;
+  repeated CharacterDto user_characters = 15;
+  int64 onboarding_template_id = 16;
+  repeated int64 main_character_ids = 17;
+}
+
+// C# Source: Frever.ClientService.Contract.StartPack.UserAssets.UserAssetsData.cs
+message UserAssetsData {
+  repeated int64 body_animations = 10;
+  repeated int64 camera_filters = 11;
+  repeated int64 set_locations = 12;
+  repeated int64 vfxs = 13;
+  repeated int64 voice_filters = 14;
+  repeated int64 wardrobes = 15;
+}
+
+// C# Source: Frever.ClientService.Contract.StartPack.UserAssets.CharacterDto.cs
+message CharacterDto {
+  int32 access = 10;
+  repeated frever.startpack.common.FileInfo files = 11;
+  int64 gender_id = 12;
+  int64 group_id = 13;
+  int64 id = 14;
+  bool is_frever_star = 15;
+  bool is_new = 16;
+  string name = 17;
+  int64 race_id = 18;
+}
