@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import {
   startTestServer,
@@ -269,20 +271,22 @@ describe('social, profile and fallback endpoints', () => {
     assert.deepEqual(await response.json(), []);
   });
 
-  test('GET /assets/maps returns maps list from data/assets/maps.txt', async () => {
+  test('GET /assets/maps returns maps list from <data>/assets/maps.txt', async () => {
+    fs.mkdirSync(path.join(ctx.dir, 'assets'), { recursive: true });
+    fs.writeFileSync(path.join(ctx.dir, 'assets', 'maps.txt'), '# comment\nmap_party_room\nmap_laboratory\n');
     const response = await authedGet(ctx.baseUrl, token, '/assets/maps');
     assert.equal(response.status, 200);
     const body = await response.json();
-    assert.ok(Array.isArray(body.maps));
-    assert.ok(body.maps.length > 0);
+    assert.deepEqual(body.maps, ['map_party_room', 'map_laboratory']);
   });
 
-  test('GET /assets/animations returns animations list from data/assets/animations.txt', async () => {
+  test('GET /assets/animations returns animations list from <data>/assets/animations.txt', async () => {
+    fs.mkdirSync(path.join(ctx.dir, 'assets'), { recursive: true });
+    fs.writeFileSync(path.join(ctx.dir, 'assets', 'animations.txt'), 'idle\ndance_01\n');
     const response = await authedGet(ctx.baseUrl, token, '/assets/animations');
     assert.equal(response.status, 200);
     const body = await response.json();
-    assert.ok(Array.isArray(body.animations));
-    assert.ok(body.animations.length > 0);
+    assert.deepEqual(body.animations, ['idle', 'dance_01']);
   });
 
   test('unknown route returns 404 and is logged', async () => {

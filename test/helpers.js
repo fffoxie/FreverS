@@ -32,6 +32,7 @@ export async function startTestServer() {
   return {
     app,
     baseUrl,
+    dir,
     async close() {
       await new Promise((resolve) => server.close(resolve));
       app.db.close();
