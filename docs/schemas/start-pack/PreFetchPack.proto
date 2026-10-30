@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package frever.startpack.prefetch;
+
+import "docs/schemas/start-pack/Common.proto";
+
+// C# Source: Frever.ClientService.Contract.StartPack.PreFetch.PreFetchPack.cs
+message PreFetchPack {
+  repeated PreFetchEntityInfo body_animations = 10;
+  repeated PreFetchEntityInfo camera_filter_variants = 11;
+  repeated PreFetchEntityInfo set_location_bundles = 12;
+  repeated PreFetchEntityInfo uma_bundles = 13;
+  repeated PreFetchEntityInfo vfxs = 14;
+}
+
+// C# Source: Frever.ClientService.Contract.StartPack.PreFetch.PreFetchEntityInfo.cs
+message PreFetchEntityInfo {
+  repeated frever.startpack.common.FileInfo files = 10;
+  int64 id = 11;
+}
