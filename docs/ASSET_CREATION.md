@@ -63,3 +63,34 @@ node scripts/import-assets.mjs /sdcard/Download/frever_assets/
 ```
 
 This updates `data/assets/catalog.json` and creates a manifest in `data/assets/manifest/`.
+
+---
+
+## 5. Delivery Routes (what the client can download)
+
+The Node.js server serves the asset store directly from `data/` (the directory
+that also holds `frever.db`, so `FREVERS_DB_PATH` moves both together):
+
+| Request | File on disk | Content-Type |
+| --- | --- | --- |
+| `GET /assets/bundles/Android/<name>` | `data/assets/bundles/Android/<name>` | `application/octet-stream` |
+| `GET /assets/catalog.json` | `data/assets/catalog.json` | `application/json` |
+| `GET /assets/maps.txt`, `/assets/animations.txt` | `data/assets/*.txt` | `text/plain` |
+| `GET /media/<name>` | `data/videos/<name>` | `video/mp4`, `video/webm`, ... |
+
+Responses include `ETag` (size + mtime), `Last-Modified`, `Accept-Ranges: bytes`
+and `Cache-Control: public, max-age=300`. `Range` requests return `206` with
+`Content-Range`; `If-None-Match` revalidation returns `304`; missing files return
+a JSON `404`. Requests that resolve outside `data/assets` or `data/videos`
+(traversal) are rejected with the same JSON `404`.
+
+`GET /assets/maps` and `GET /assets/animations` are API routes, not files: they
+return `{"maps":[...]}` / `{"animations":[...]}` read from `maps.txt` /
+`animations.txt`.
+
+> Not yet implemented: the `AssetBundleIndex` metadata document described in
+> [`CLIENT_CONTRACT.md`](CLIENT_CONTRACT.md) §1.2. `data/assets/catalog.json` is
+> produced locally, but neither its download path nor the client's expected
+> field names have been confirmed from the binary or a device trace. See
+> [`ASSET_DELIVERY_AUDIT.md`](ASSET_DELIVERY_AUDIT.md).
+

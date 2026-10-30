@@ -3,6 +3,7 @@ import {
   findUserByUsername,
   findUserById,
   verifyPassword,
+  hashPassword,
   createRefreshToken,
   consumeRefreshToken
 } from './db.js';
@@ -95,4 +96,43 @@ export async function requestVerification(ctx) {
   // see the target from the server console.
   console.log(`[verification] path=${ctx.path} target=${value}`);
   return { body: {} };
+}
+
+/**
+ * AuthService.RegisterTemporaryAccount. Creates (once) a local `guest` account
+ * and returns the same TokenResponse shape as a normal login.
+ */
+export async function registerTemporaryAccount(ctx) {
+  let user = findUserByUsername(ctx.db, 'guest');
+  if (!user) {
+    const nextGroupRow = ctx.db.prepare('SELECT COALESCE(MAX(group_id), 0) + 1 AS next FROM users').get();
+    const nextGroup = nextGroupRow ? nextGroupRow.next : 10;
+    const { salt, hash } = hashPassword('guestpass');
+    ctx.db
+      .prepare(
+        `INSERT INTO users (username, nickname, email, group_id, password_salt, password_hash)
+         VALUES ('guest', 'guest', 'guest@localhost', ?, ?, ?)`
+      )
+      .run(nextGroup, salt, hash);
+    user = findUserByUsername(ctx.db, 'guest');
+  }
+  const issued = createRefreshToken(ctx.db, user.id, config.refreshTokenTtlSeconds);
+  return { body: tokenResponse(issueAccessToken(user), issued.token) };
+}
+
+/**
+ * AuthService.CheckIfParentEmailBound. The local server has no parental
+ * consent e-mail flow, so the account always reports a bound parent e-mail
+ * under every key spelling the stripped client may read.
+ */
+export async function parentalConsent(ctx) {
+  return {
+    body: {
+      isSuccess: true,
+      success: true,
+      isBound: true,
+      isEmailBound: true,
+      bound: true
+    }
+  };
 }
