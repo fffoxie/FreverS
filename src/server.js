@@ -1,6 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
-import path from 'node:path';
+import nodePath from 'node:path';
 import { createHash } from 'node:crypto';
 import { config as globalConfig } from './config.js';
 import { openDatabase, seedAccounts } from './db.js';
@@ -56,119 +56,166 @@ export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.se
     let bytes = 0;
     let note = '';
     try {
-      const match = matchEndpoint(method, path);
-      if (match && (match.endpoint.id === 'asset-maps' || match.endpoint.id === 'asset-animations')) {
-        // Fall through to API route handler
-      } else if (path.startsWith('/assets/') || path.startsWith('/media/')) {
-        const rootDir = path.dirname(globalConfig.dbPath);
-        const relPath = path.startsWith('/assets/') ? path.slice(8) : path.slice(7);
-        const safeBase = path.startsWith('/assets/') ? path.join(rootDir, 'assets') : path.join(rootDir, 'videos');
-        const targetPath = path.resolve(safeBase, relPath);
-        if (!targetPath.startsWith(safeBase) || !fs.existsSync(targetPath) || fs.statSync(targetPath).isDirectory()) {
-          sendJson(res, 404, { error: 'not_found', error_description: 'Asset not found' });
-          status = 404;
+      if (reqPath.startsWith('/assets/') || reqPath.startsWith('/media/')) {
+        const match = matchEndpoint(method, reqPath);
+        if (match) {
+          const ctx = {
+            req,
+            res,
+            url,
+            method,
+            path: reqPath,
+            body: parsed.body,
+            text: parsed.text,
+            raw: parsed.raw,
+            db,
+            params: match.params,
+            logNote: ''
+          };
+          const result = await match.endpoint.handler(ctx);
+          if (!result) throw new Error(`Handler for ${match.endpoint.id} returned no result`);
+          const payload = result.body;
+          const body = Buffer.from(payload === undefined || payload === null ? '' : JSON.stringify(payload));
+          status = result.status || 200;
+          res.writeHead(status, {
+            'content-type': 'application/json; charset=utf-8',
+            'content-length': body.length,
+            'cache-control': 'no-store',
+            ...(result.headers || {})
+          });
+          res.end(body);
+          bytes = body.length;
+          note = ctx.logNote || '';
         } else {
-          const stat = fs.statSync(targetPath);
-          const content = fs.readFileSync(targetPath);
-          const etag = `"${createHash('md5').update(content).digest('hex')}"`;
-          if (req.headers['if-none-match'] === etag) {
-            res.writeHead(304, { ETag: etag });
-            res.end();
-            status = 304;
+          const rootDir = nodePath.dirname(globalConfig.dbPath);
+          const relPath = reqPath.startsWith('/assets/') ? reqPath.slice(8) : reqPath.slice(7);
+          const safeBase = reqPath.startsWith('/assets/') ? nodePath.join(rootDir, 'assets') : nodePath.join(rootDir, 'videos');
+          const targetPath = nodePath.resolve(safeBase, relPath);
+          if (!targetPath.startsWith(safeBase) || !fs.existsSync(targetPath) || fs.statSync(targetPath).isDirectory()) {
+            sendJson(res, 404, { error: 'not_found', error_description: 'Asset not found' });
+            status = 404;
           } else {
-            const range = req.headers.range;
-            if (range) {
-              const parts = range.replace(/bytes=/, '').split('-');
-              const start = parseInt(parts[0], 10);
-              const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-              const chunksize = end - start + 1;
-              res.writeHead(206, {
-                'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-                'Accept-Ranges': 'bytes',
-                'Content-Length': chunksize,
-                'Content-Type': 'application/octet-stream',
-                ETag: etag
-              });
-              res.end(content.subarray(start, end + 1));
-              status = 206;
-              bytes = chunksize;
+            const stat = fs.statSync(targetPath);
+            const content = fs.readFileSync(targetPath);
+            const etag = `"${createHash('md5').update(content).digest('hex')}"`;
+            if (req.headers['if-none-match'] === etag) {
+              res.writeHead(304, { ETag: etag });
+              res.end();
+              status = 304;
             } else {
-              res.writeHead(200, {
-                'Content-Length': stat.size,
-                'Content-Type': 'application/octet-stream',
-                'Accept-Ranges': 'bytes',
-                ETag: etag
-              });
-              res.end(content);
-              status = 200;
-              bytes = stat.size;
+              const range = req.headers.range;
+              if (range) {
+                const parts = range.replace(/bytes=/, '').split('-');
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+                const chunksize = end - start + 1;
+                res.writeHead(206, {
+                  'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                  'Accept-Ranges': 'bytes',
+                  'Content-Length': chunksize,
+                  'Content-Type': 'application/octet-stream',
+                  ETag: etag
+                });
+                res.end(content.subarray(start, end + 1));
+                status = 206;
+                bytes = chunksize;
+              } else {
+                res.writeHead(200, {
+                  'Content-Length': stat.size,
+                  'Content-Type': 'application/octet-stream',
+                  'Accept-Ranges': 'bytes',
+                  ETag: etag
+                });
+                res.end(content);
+                status = 200;
+                bytes = stat.size;
+              }
             }
+            note = 'asset';
           }
-          note = 'asset';
         }
       } else {
-        const dashboard = await handleDashboard({ req, res, method, path, db, body: parsed.body });
+        const dashboard = await handleDashboard({ req, res, method, path: reqPath, db, body: parsed.body });
         if (dashboard) {
           status = dashboard.status;
           bytes = dashboard.bytes;
           note = 'dashboard';
         } else {
-        const match = matchEndpoint(method, path);
-      if (!match) {
-        status = 404;
-        const preview =
-          globalConfig.logUnknownBodyPreview > 0 && parsed.text
-            ? parsed.text.slice(0, globalConfig.logUnknownBodyPreview)
-            : '';
-        logUnknown({
-          method,
-          path,
-          bodySize: parsed.raw.length,
-          contentType: req.headers['content-type'],
-          preview,
-          raw: parsed.raw,
-          headers: req.headers
-        });
-        const body = Buffer.from(
-          JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${path}` })
-        );
-        res.writeHead(404, {
-          'content-type': 'application/json; charset=utf-8',
-          'content-length': body.length
-        });
-        res.end(body);
-        status = 404;
-        bytes = body.length;
-      } else {
-        const ctx = {
-          req,
-          res,
-          url,
-          method,
-          path,
-          body: parsed.body,
-          text: parsed.text,
-          raw: parsed.raw,
-          db,
-          params: match.params,
-          logNote: ''
-        };
-        const result = await match.endpoint.handler(ctx);
-        if (!result) throw new Error(`Handler for ${match.endpoint.id} returned no result`);
-        const payload = result.body;
-        const body = Buffer.from(payload === undefined || payload === null ? '' : JSON.stringify(payload));
-        status = result.status || 200;
-        res.writeHead(status, {
-          'content-type': 'application/json; charset=utf-8',
-          'content-length': body.length,
-          'cache-control': 'no-store',
-          ...(result.headers || {})
-        });
-        res.end(body);
-        bytes = body.length;
-        note = ctx.logNote || '';
-      }
-      }
+          const match = matchEndpoint(method, reqPath);
+          if (!match) {
+            const preview =
+              globalConfig.logUnknownBodyPreview > 0 && parsed.text
+                ? parsed.text.slice(0, globalConfig.logUnknownBodyPreview)
+                : '';
+            logUnknown({
+              method,
+              path: reqPath,
+              bodySize: parsed.raw.length,
+              contentType: req.headers['content-type'],
+              preview,
+              raw: parsed.raw,
+              headers: req.headers
+            });
+
+            if (globalConfig.captureMode) {
+              logCapturedRequest({
+                method,
+                path: reqPath,
+                headers: req.headers,
+                body: parsed.body
+              });
+              const body = Buffer.from(JSON.stringify({}));
+              status = 200;
+              res.writeHead(200, {
+                'content-type': 'application/json; charset=utf-8',
+                'content-length': body.length,
+                'cache-control': 'no-store'
+              });
+              res.end(body);
+              bytes = body.length;
+              note = 'captured';
+            } else {
+              status = 404;
+              const body = Buffer.from(
+                JSON.stringify({ error: 'not_found', error_description: `No route for ${method} ${reqPath}` })
+              );
+              res.writeHead(404, {
+                'content-type': 'application/json; charset=utf-8',
+                'content-length': body.length
+              });
+              res.end(body);
+              bytes = body.length;
+            }
+          } else {
+            const ctx = {
+              req,
+              res,
+              url,
+              method,
+              path: reqPath,
+              body: parsed.body,
+              text: parsed.text,
+              raw: parsed.raw,
+              db,
+              params: match.params,
+              logNote: ''
+            };
+            const result = await match.endpoint.handler(ctx);
+            if (!result) throw new Error(`Handler for ${match.endpoint.id} returned no result`);
+            const payload = result.body;
+            const body = Buffer.from(payload === undefined || payload === null ? '' : JSON.stringify(payload));
+            status = result.status || 200;
+            res.writeHead(status, {
+              'content-type': 'application/json; charset=utf-8',
+              'content-length': body.length,
+              'cache-control': 'no-store',
+              ...(result.headers || {})
+            });
+            res.end(body);
+            bytes = body.length;
+            note = ctx.logNote || '';
+          }
+        }
       }
     } catch (error) {
       const { status: errorStatus, payload } = errorPayload(error);
