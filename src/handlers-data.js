@@ -109,8 +109,9 @@ export function emptyArray(ctx) {
   return { body: [] };
 }
 
-function readAssetListFile(filename) {
-  const file = path.join(path.dirname(config.dbPath), 'assets', filename);
+function readAssetListFile(ctx, filename) {
+  const root = ctx.assetRoot || path.join(path.dirname(config.dbPath), 'assets');
+  const file = path.join(root, filename);
   try {
     if (!fs.existsSync(file)) return [];
     return fs.readFileSync(file, 'utf8')
@@ -124,12 +125,12 @@ function readAssetListFile(filename) {
 
 export function assetMaps(ctx) {
   authenticate(ctx, false);
-  return { body: { maps: readAssetListFile('maps.txt') } };
+  return { body: { maps: readAssetListFile(ctx, 'maps.txt') } };
 }
 
 export function assetAnimations(ctx) {
   authenticate(ctx, false);
-  return { body: { animations: readAssetListFile('animations.txt') } };
+  return { body: { animations: readAssetListFile(ctx, 'animations.txt') } };
 }
 
 export function pastRewards(ctx) {

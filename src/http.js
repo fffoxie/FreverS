@@ -147,7 +147,7 @@ export function logCapturedRequest({ method, path: reqPath, headers, body }) {
 
 export function logUnknown({ method, path: reqPath, bodySize, contentType, preview, raw, headers }) {
   emit(
-    `[unknown-route] method=${method} path=${reqPath} bodySize=${bodySize} contentType=${contentType || '-'}` +
+    `[unknown-route] method=${method} path=${path} bodySize=${bodySize} contentType=${contentType || '-'}` +
       (preview ? ` body=${JSON.stringify(preview)}` : '')
   );
   if (process.env.FREVERS_CAPTURE === '1' || config.captureMode) {

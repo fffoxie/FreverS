@@ -7,6 +7,7 @@ import { openDatabase, seedAccounts } from './db.js';
 import { matchEndpoint, normalizePath } from './endpoints.js';
 import { setPublicBaseUrl } from './models.js';
 import { handleDashboard } from './dashboard.js';
+import { serveAsset } from './assets.js';
 import { HttpError, parseRequestBody, sendJson, logRequest, logUnknown } from './http.js';
 
 function errorPayload(error) {
@@ -29,6 +30,11 @@ function errorPayload(error) {
 export function createApp({ dbPath = globalConfig.dbPath, seed = globalConfig.seed } = {}) {
   const db = openDatabase(dbPath);
   const seedResult = seedAccounts(db, seed);
+  // Files live next to the database so tests and operators can point
+  // FREVERS_DB_PATH at an isolated directory (docs/ASSET_CREATION.md §3).
+  const dataDir = path.dirname(path.resolve(dbPath));
+  const assetRoot = path.join(dataDir, 'assets');
+  const mediaRoot = path.join(dataDir, 'videos');
 
   const server = http.createServer(async (req, res) => {
     const started = process.hrtime.bigint();

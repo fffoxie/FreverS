@@ -1,4 +1,4 @@
-import { login, updateUsername, requestVerification } from './handlers-auth.js';
+import { login, updateUsername, requestVerification, registerTemporaryAccount, parentalConsent } from './handlers-auth.js';
 import {
   versions,
   urls,
